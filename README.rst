@@ -1,10 +1,16 @@
-BEL Enrichment
-==============
+BEL Enrichment |build|
+======================
 A package for generating curation sheets for rationally enriching a BEL graph using INDRA [1]_ and PyBEL [2]_.
 
-Installation
-------------
-``bel_enrichment`` can be installed from directly GitHub with the following command:
+Installation |pypi_version| |python_versions| |pypi_license|
+------------------------------------------------------------
+``bel_enrichment`` can be installed from PyPI with the following command:
+
+.. code-block:: bash
+
+   $ pip install bel_enrichment
+
+The latest version can be installed form GitHub with:
 
 .. code-block:: bash
 
@@ -33,3 +39,15 @@ References
        assembly <https://doi.org/10.15252/msb.20177651>`_. Molecular Systems Biology, 13(11), 954.
 .. [2] Hoyt, C. T., Konotopez, A., Ebeling, C., (2017). `PyBEL: a computational framework for Biological Expression
        Language <https://doi.org/10.1093/bioinformatics/btx660>`_. Bioinformatics (Oxford, England), 34(4), 703–704.
+
+.. |build| image:: https://travis-ci.com/bel-enrichment/bel-enrichment.svg?branch=master
+    :target: https://travis-ci.com/bel-enrichment/bel-enrichment
+
+.. |python_versions| image:: https://img.shields.io/pypi/pyversions/bel_enrichment.svg
+    :alt: Stable Supported Python Versions
+
+.. |pypi_version| image:: https://img.shields.io/pypi/v/bel_enrichment.svg
+    :alt: Current version on PyPI
+
+.. |pypi_license| image:: https://img.shields.io/pypi/l/bel_enrichment.svg
+    :alt: License
