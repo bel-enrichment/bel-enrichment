@@ -128,9 +128,9 @@ def generate_error_types(path: str) -> Tuple[dict, str]:
     df = pd.read_excel(path)
 
     error_types = defaultdict(int)
+    curator = None
 
     for line, row in df.iterrows():
-
         if line == 0:
             curator = row.get('Curator')
 
