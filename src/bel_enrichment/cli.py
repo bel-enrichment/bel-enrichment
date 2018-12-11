@@ -40,3 +40,7 @@ def make_sheet(graph, directory, info_cutoff, belief_cutoff):
         minimum_information_density=info_cutoff,
         minimum_belief=belief_cutoff,
     )
+
+
+if __name__ == '__main__':
+    main()

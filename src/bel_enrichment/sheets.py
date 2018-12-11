@@ -75,7 +75,8 @@ def _check_curation_template_columns(dataframe: pd.DataFrame, path: str) -> bool
     return True
 
 
-def process_row(bel_parser: BELParser, row: Dict):
+def process_row(bel_parser: BELParser, row: Dict) -> None:
+    """Process a row."""
     if not row['Checked']:  # don't use unchecked material
         return
 
@@ -118,10 +119,10 @@ def process_row(bel_parser: BELParser, row: Dict):
         raise Exception(bel)
 
 
-def generate_error_types(path) -> Tuple[dict, str]:
+def generate_error_types(path: str) -> Tuple[dict, str]:
     """Generate report about the types of errors INDRA made.
 
-    :param str path: path to the excel file
+    :param path: path to the excel file
     :return: summary of the curation
     """
     df = pd.read_excel(path)

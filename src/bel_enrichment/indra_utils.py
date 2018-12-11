@@ -136,11 +136,11 @@ def get_rows_from_statement(statement: Statement, duplicates: bool = True) -> It
 
 def _keep_evidence(evidence: Evidence):
     return (
-            evidence.pmid and
-            evidence.text and
-            evidence.text not in TEXT_BLACKLIST and
-            evidence.source_api and
-            evidence.source_api not in SOURCE_BLACKLIST
+        evidence.pmid and
+        evidence.text and
+        evidence.text not in TEXT_BLACKLIST and
+        evidence.source_api and
+        evidence.source_api not in SOURCE_BLACKLIST
     )
 
 

@@ -26,6 +26,7 @@ def export_separate(graph: BELGraph,
                     limit: Optional[int] = None,
                     duplicates: bool = False
                     ):
+    """Get genes from the graph and export in separate folders."""
     gene_symbols = get_gene_symbols(
         graph=graph,
         cutoff=minimum_information_density,
@@ -60,6 +61,7 @@ def export_single(graph: BELGraph,
                   limit: Optional[int] = None,
                   duplicates: bool = False
                   ) -> List[Statement]:
+    """Get genes from the graph and export as one file."""
     gene_symbols = get_gene_symbols(graph=graph, cutoff=cutoff)
 
     return get_and_write_statements(
