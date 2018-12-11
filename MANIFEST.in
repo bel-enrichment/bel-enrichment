@@ -1,0 +1,6 @@
+graft src
+
+global-exclude *.py[cod] __pycache__ *.so *.dylib .DS_Store *.gpickle
+
+exclude .bumpversion.cfg .coveragerc .flake8
+include *.rst *.txt *.yml LICENSE *.ini

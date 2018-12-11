@@ -10,15 +10,14 @@ jobs:
   include:
     # lint stage
     - stage: lint
-      env: TOXENV=flake8
+      env: TOXENV=manifest
+    - env: TOXENV=flake8
     - env: TOXENV=pyroma
     - env: TOXENV=xenon
     - env: TOXENV=mypy
     # docs stage
     - stage: docs
-      env: TOXENV=doc8
-    - env: TOXENV=readme
-    - env: TOXENV=docs
+      env: TOXENV=readme
 matrix:
   allow_failures:
     - env: TOXENV=xenon
