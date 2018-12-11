@@ -10,7 +10,7 @@ jobs:
   include:
     # lint stage
     - stage: lint
-    - env: TOXENV=flake8
+      env: TOXENV=flake8
     - env: TOXENV=pyroma
     - env: TOXENV=xenon
     - env: TOXENV=mypy
