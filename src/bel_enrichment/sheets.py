@@ -23,7 +23,10 @@ ERROR_BUT_ALSO_OTHER_STATEMENT = 'Error but other statement was identified'
 MODIFIED_BY_CURATOR = 'Modified by curator'
 
 
-def get_sheets_graph(directory, use_cached: bool = False, cache_path: Optional[str] = None,
+def get_sheets_graph(directory,
+                     *,
+                     use_cached: bool = False,
+                     cache_path: Optional[str] = None,
                      **graph_metadata) -> BELGraph:
     """Get the BEL graph from all Google sheets.
 
@@ -54,21 +57,21 @@ def get_sheets_graph(directory, use_cached: bool = False, cache_path: Optional[s
     return graph
 
 
-def _check_curation_template_columns(dataframe: pd.DataFrame, path: str) -> bool:
+def _check_curation_template_columns(df: pd.DataFrame, path: str) -> bool:
     """Check the columns in a curation dataframe."""
-    if 'Curator' not in dataframe.columns:
+    if 'Curator' not in df.columns:
         logger.warning(f'{path} is missing the "Curator" column')
         return False
 
-    if 'Checked' not in dataframe.columns:
+    if 'Checked' not in df.columns:
         logger.warning(f'{path} is missing the "Checked" column')
         return False
 
-    if 'Correct' not in dataframe.columns:
+    if 'Correct' not in df.columns:
         logger.warning(f'{path} is missing the "Correct" column')
         return False
 
-    if 'Changed' not in dataframe.columns:
+    if 'Changed' not in df.columns:
         logger.warning(f'{path} is missing the "Changed" column')
         return False
 
