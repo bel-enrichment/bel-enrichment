@@ -11,6 +11,7 @@ from indra.assemblers.pybel import PybelAssembler
 from indra.sources import indra_db_rest
 from indra.statements import Evidence, Statement
 from indra.tools.assemble_corpus import filter_belief, run_preassembly
+
 from pybel import BELGraph
 from pybel.constants import ANNOTATIONS, CITATION, CITATION_REFERENCE, EVIDENCE, RELATION, UNQUALIFIED_EDGES
 
@@ -49,37 +50,57 @@ SOURCE_BLACKLIST = {'bel', 'signor'}
 SUBSTRING_BLACKLIST = {'CHEBI', 'PUBCHEM', 'act(bp('}
 
 
-def get_and_write_statements(agents: Union[str, List[str]], file: Optional[TextIO] = None, sep: str = '\t',
-                             limit: Optional[int] = None, duplicates: bool = False) -> List[Statement]:
+def get_and_write_statements(agents: Union[str, List[str]],
+                             file: Optional[TextIO] = None,
+                             sep: Optional[str] = None,
+                             limit: Optional[int] = None,
+                             duplicates: bool = False,
+                             minimum_belief: Optional[float] = None,
+                             ) -> List[Statement]:
     """Get INDRA statements for the given agents and write the to a TSV for BEL curation.
 
     :param agents: A list of agents (HGNC gene symbols)
     :param file: The file to write to
-    :param sep: The separator for the CSV
+    :param sep: The separator for the CSV. Defaults to a tab.
     :param limit: The optional limit of statements to write
     :param duplicates: should duplicate statements be written (with multiple evidences?)
-    :return: the number of statements written to the CSV
     """
-    on_limit = 'sample' if limit is None else 'truncate'
     if isinstance(agents, str):
         agents = [agents]
-    statements = indra_db_rest.get_statements(agents=agents, on_limit=on_limit)
-    write_statements(statements, file=file, sep=sep, limit=limit, duplicates=duplicates)
+
+    statements = indra_db_rest.get_statements(agents=agents)
+
+    print_statements(
+        statements,
+        file=file,
+        sep=sep,
+        limit=limit,
+        duplicates=duplicates,
+        minimum_belief=minimum_belief,
+    )
+
     return statements
 
 
-def write_statements(statements: List[Statement], file: Optional[TextIO] = None, sep: str = '\t',
-                     limit: Optional[int] = None, duplicates: bool = False, belief_cutoff: Optional[float] = None):
+def print_statements(statements: List[Statement],
+                     file: Optional[TextIO] = None,
+                     sep: Optional[str] = None,
+                     limit: Optional[int] = None,
+                     duplicates: bool = False,
+                     minimum_belief: Optional[float] = None,
+                     ):
     """Write statements to a CSV for curation.
 
     This one is similar to the other one, but sorts by the BEL string and only keeps the first for each group.
     """
+    sep = sep or '\t'
+
     print(*header, sep=sep, file=file)
 
     statements = run_preassembly(statements)
 
-    if belief_cutoff is not None:
-        statements = filter_belief(statements, belief_cutoff)
+    if minimum_belief is not None:
+        statements = filter_belief(statements, minimum_belief)
 
     rows = get_rows_from_statements(statements, duplicates=duplicates)
     rows = sorted(rows, key=attrgetter('pmid', 'evidence'))
@@ -115,11 +136,11 @@ def get_rows_from_statement(statement: Statement, duplicates: bool = True) -> It
 
 def _keep_evidence(evidence: Evidence):
     return (
-        evidence.pmid and
-        evidence.text and
-        evidence.text not in TEXT_BLACKLIST and
-        evidence.source_api and
-        evidence.source_api not in SOURCE_BLACKLIST
+            evidence.pmid and
+            evidence.text and
+            evidence.text not in TEXT_BLACKLIST and
+            evidence.source_api and
+            evidence.source_api not in SOURCE_BLACKLIST
     )
 
 

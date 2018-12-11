@@ -16,12 +16,22 @@ This package installs a command line script that has several commands.
 
 Ranking Genes
 ~~~~~~~~~~~~~
-The first generates a ranking for genes based on the information content in a given BEL graph that has been
-pre-compiled by PyBEL.
+Generate a ranking for genes based on the information content in a given BEL graph that has been pre-compiled by PyBEL.
 
 .. code-block:: bash
 
    $ bel-enrichment ranks zhang2011.bel
+
+Generating Sheets
+~~~~~~~~~~~~~~~~~
+Generate a folder full of curation sheets based on the given BEL graph that has been pre-compiled by PyBEL.
+Use ``--info-cutoff to specify the minimum information density cutoff. 1.0 means that the node has no edges, .5 means
+one edge, and so on. Use ``--belief-cutoff`` to specify the minimum belief score from INDRA for adding the statement
+to the sheet. Higher belief means the more chance a statement is already right.
+
+.. code-block:: bash
+
+   $ bel-enrichment make_sheet zhang2011.bel --directory ~/Desktop/zhang-enrichment
 
 References
 ----------
