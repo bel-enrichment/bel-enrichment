@@ -4,7 +4,7 @@ A package for generating curation sheets for rationally enriching a BEL graph us
 
 Installation
 ------------
-`bel_enrichment` can be installed from directly GitHub with the following command:
+``bel_enrichment`` can be installed from directly GitHub with the following command:
 
 .. code-block:: bash
 
