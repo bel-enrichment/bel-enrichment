@@ -25,7 +25,7 @@ Generate a ranking for genes based on the information content in a given BEL gra
 Generating Sheets
 ~~~~~~~~~~~~~~~~~
 Generate a folder full of curation sheets based on the given BEL graph that has been pre-compiled by PyBEL.
-Use ``--info-cutoff to specify the minimum information density cutoff. 1.0 means that the node has no edges, .5 means
+Use ``--info-cutoff`` to specify the minimum information density cutoff. 1.0 means that the node has no edges, .5 means
 one edge, and so on. Use ``--belief-cutoff`` to specify the minimum belief score from INDRA for adding the statement
 to the sheet. Higher belief means the more chance a statement is already right.
 
