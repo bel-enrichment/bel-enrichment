@@ -14,7 +14,7 @@ The latest version can be installed form GitHub with:
 
 .. code-block:: bash
 
-   $ pip install git+https://github.com/cthoyt/bel-enrichment.git
+   $ pip install git+https://github.com/bel-enrichment/bel-enrichment.git
 
 Usage
 -----
