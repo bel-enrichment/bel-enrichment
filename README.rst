@@ -10,7 +10,7 @@ Installation |pypi_version| |python_versions| |pypi_license|
 
    $ pip install bel_enrichment
 
-The latest version can be installed form GitHub with:
+The latest version can be installed from GitHub with:
 
 .. code-block:: bash
 
