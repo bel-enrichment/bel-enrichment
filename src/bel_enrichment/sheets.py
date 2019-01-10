@@ -5,14 +5,16 @@
 import logging
 import os
 from collections import defaultdict
-from typing import Dict, Iterable, Optional, Tuple
+from typing import Dict, Iterable, Mapping, Tuple
 
 import pandas as pd
+import pyparsing
 from tqdm import tqdm
 
-from pybel import BELGraph, from_pickle, to_pickle
+from pybel import BELGraph
 from pybel.constants import CITATION_REFERENCE, CITATION_TYPE, CITATION_TYPE_PUBMED
 from pybel.parser import BELParser
+from pybel.parser.exc import BELParserWarning, BELSyntaxError
 
 logger = logging.getLogger(__name__)
 
@@ -21,40 +23,6 @@ ERROR = 'Error'
 CORRECT = 'Correct'
 ERROR_BUT_ALSO_OTHER_STATEMENT = 'Error but other statement was identified'
 MODIFIED_BY_CURATOR = 'Modified by curator'
-
-
-def get_sheets_graph(directory,
-                     *,
-                     use_cached: bool = False,
-                     cache_path: Optional[str] = None,
-                     **graph_metadata) -> BELGraph:
-    """Get the BEL graph from all Google sheets.
-
-    .. warning:: This BEL graph isn't pre-filled with namespace and annotation URLs.
-    """
-    if use_cached and cache_path is not None and os.path.exists(cache_path):
-        return from_pickle(cache_path)
-
-    graph = BELGraph(**graph_metadata)
-    logger.info('streamlining parser')
-    bel_parser = BELParser(graph)
-
-    for path in tqdm(list(get_enrichment_directories(directory)), desc='Sheets'):
-        df = pd.read_excel(path)
-
-        # Check columns in dataframe exist
-        if not _check_curation_template_columns(df, path):
-            continue
-
-        for line, row in tqdm(df.iterrows(), total=len(df.index), leave=False, desc=path.split('/')[-1].split('_')[0]):
-            try:
-                process_row(bel_parser, row)
-            except Exception as e:
-                # logger.info('%s [line %d] - parse error: %s', path, line, e.args[0])
-                graph.warnings.append((line, path, e.args[0]))
-
-    to_pickle(graph, cache_path)
-    return graph
 
 
 def _check_curation_template_columns(df: pd.DataFrame, path: str) -> bool:
@@ -78,7 +46,7 @@ def _check_curation_template_columns(df: pd.DataFrame, path: str) -> bool:
     return True
 
 
-def process_row(bel_parser: BELParser, row: Dict) -> None:
+def process_row(graph: BELGraph, bel_parser: BELParser, row: Dict, line_number: int) -> None:
     """Process a row."""
     if not row['Checked']:  # don't use unchecked material
         return
@@ -104,7 +72,7 @@ def process_row(bel_parser: BELParser, row: Dict) -> None:
     # TODO set annotations if they exist
 
     # Set annotations
-    bel_parser.control_parser.annotation_dict.update({
+    bel_parser.control_parser.annotations.update({
         'Curator': {row['Curator']},
         'INDRA_UUID': {row['INDRA UUID']},
         'Confidence': 'Medium',  # needs re-curation
@@ -117,12 +85,14 @@ def process_row(bel_parser: BELParser, row: Dict) -> None:
     bel = f"{sub} {row['Predicate']} {obj}"
 
     try:
-        bel_parser.parseString(bel)
-    except Exception:
-        raise Exception(bel)
+        bel_parser.parseString(bel, line_number=line_number)
+    except BELParserWarning as exc:
+        graph.add_warning(exc)
+    except pyparsing.ParseException as e:
+        graph.add_warning(BELSyntaxError(line_number=line_number, line=bel, position=e.loc))
 
 
-def generate_error_types(path: str) -> Tuple[dict, str]:
+def generate_error_types(path: str) -> Tuple[Mapping[str, int], str]:
     """Generate report about the types of errors INDRA made.
 
     :param path: path to the excel file
@@ -150,10 +120,10 @@ def generate_error_types(path: str) -> Tuple[dict, str]:
     return error_types, curator
 
 
-def generate_curation_report(path) -> dict:
+def generate_curation_report(path: str) -> dict:
     """Generate report about curated/non-curated statements in a given curation template.
 
-    :param str path: path to the excel file
+    :param path: path to the excel file
     :return: summary of the curation
     """
     df = pd.read_excel(path)
@@ -206,7 +176,7 @@ def generate_curation_report(path) -> dict:
 
         curation_results['Total'] += 1
 
-    return curation_results
+    return dict(curation_results)
 
 
 def generate_curation_summary(input_directory: str, output_directory: str):
@@ -214,7 +184,7 @@ def generate_curation_summary(input_directory: str, output_directory: str):
     summary_excel_rows = {}
     error_excel_rows = {}
 
-    for path in tqdm(list(get_enrichment_directories(input_directory)), desc='Generating curation report'):
+    for path in tqdm(list(get_sheets_paths(input_directory)), desc='Generating curation report'):
         gene_symbol = path.split('/')[-2]
 
         # Subfolder name (Gene Symbol) -> dictionary results
@@ -237,7 +207,7 @@ def generate_curation_summary(input_directory: str, output_directory: str):
     df_error.to_csv(os.path.join(output_directory, 'error_types.csv'))
 
 
-def get_enrichment_directories(directory: str) -> Iterable[str]:
+def get_sheets_paths(directory: str) -> Iterable[str]:
     """List the excel curation sheets."""
     for path in os.listdir(directory):
         folder = os.path.join(directory, path)
