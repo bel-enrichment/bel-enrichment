@@ -10,6 +10,19 @@ from pybel.cli import graph_pickle_argument
 from .ranking import process_rank_genes
 from .workflow import export_separate
 
+info_cutoff_option = click.option(
+    '--info-cutoff',
+    type=float,
+    default=1.0,
+    help='Minimum inverse node degree. Lower allows more genes.',
+)
+belief_cutoff_option = click.option(
+    '--belief-cutoff',
+    type=float,
+    default=0.30,
+    help='Minimum belief score. Lower gets more statements.',
+)
+
 
 @click.group()
 def main():
@@ -30,8 +43,8 @@ def ranks(graph, number, sep):
 @main.command()
 @graph_pickle_argument
 @click.option('-d', '--directory', type=click.Path(file_okay=False, dir_okay=True), default=os.getcwd())
-@click.option('--info-cutoff', type=float, default=1.0, help='Minimum inverse node degree. Lower allows more genes.')
-@click.option('--belief-cutoff', type=float, default=0.30, help='Minimum belief score. Lower gets more statements.')
+@info_cutoff_option
+@belief_cutoff_option
 def make_sheet(graph, directory, info_cutoff, belief_cutoff):
     """Rank the genes in a graph."""
     export_separate(

@@ -39,7 +39,10 @@ process_graph: Pipeline = Pipeline.from_functions([
 
 
 def rank_genes(graph: BELGraph) -> Counter:
-    """Rank the genes by their inverse sum of in- and out-degrees."""
+    r"""Rank the genes by their inverse sum of in- and out-degrees.
+
+    .. math:: rank(n) = \frac{1}{1 + degree_{in}(n) + degree_{out}(n)}
+    """
     return Counter(dict(
         ((node.namespace, node.name), 1 / (1 + degree))
         for node, degree in graph.degree()
