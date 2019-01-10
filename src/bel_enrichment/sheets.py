@@ -179,12 +179,15 @@ def generate_curation_report(path: str) -> dict:
     return dict(curation_results)
 
 
-def generate_curation_summary(input_directory: str, output_directory: str):
+def generate_curation_summary(input_directory: str, output_directory: str, use_tqdm: bool = True):
     """Generate a summary of the curation results on excel."""
     summary_excel_rows = {}
     error_excel_rows = {}
 
-    for path in tqdm(list(get_sheets_paths(input_directory)), desc='Generating curation report'):
+    paths = get_sheets_paths(input_directory)
+    if use_tqdm:
+        paths = tqdm(list(paths), desc='Generating curation report')
+    for path in paths:
         gene_symbol = path.split('/')[-2]
 
         # Subfolder name (Gene Symbol) -> dictionary results
@@ -198,12 +201,14 @@ def generate_curation_summary(input_directory: str, output_directory: str):
 
     # Export Summary Report
     df_summary = pd.DataFrame.from_dict(summary_excel_rows, orient='index')
+    df_summary = df_summary.fillna(0).astype(int)
     # Rearrange columns
     df_summary = df_summary[[CORRECT, ERROR, ERROR_BUT_ALSO_OTHER_STATEMENT, MODIFIED_BY_CURATOR, NOT_CURATED, 'Total']]
     df_summary.to_csv(os.path.join(output_directory, 'curation_summary.csv'))
 
     # Export Error Types Report
     df_error = pd.DataFrame.from_dict(error_excel_rows, orient='index')
+    df_error = df_error.fillna(0).astype(int)
     df_error.to_csv(os.path.join(output_directory, 'error_types.csv'))
 
 
