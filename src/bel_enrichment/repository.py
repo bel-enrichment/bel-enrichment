@@ -69,10 +69,7 @@ class BELSheetsRepository:
 
             graph.path = path
 
-            line_rows = df.iterrows()
-            # if use_tqdm:
-            #    line_rows = tqdm(line_rows, total=len(df.index), leave=False, desc=path.split('/')[-1].split('_')[0])
-            for line_number, row in line_rows:
+            for line_number, row in df.iterrows():
                 process_row(graph, bel_parser=bel_parser, row=row, line_number=line_number)
 
         to_pickle(graph, self._cache_pickle_path)
