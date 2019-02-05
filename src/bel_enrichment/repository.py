@@ -37,7 +37,7 @@ class BELSheetsRepository:
         return os.path.join(self.output_directory, self.pickle_name)
 
     def get_graph(self,
-                  use_cached: bool = False,
+                  use_cached: bool = True,
                   use_tqdm: bool = True,
                   tqdm_kwargs: Optional[Mapping[str, Any]] = None,
                   ) -> BELGraph:
