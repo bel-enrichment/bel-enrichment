@@ -55,7 +55,7 @@ class BELSheetsRepository:
         paths = get_sheets_paths(self.directory)
 
         if use_tqdm:
-            _tqdm_kwargs = dict(desc='Sheets')
+            _tqdm_kwargs = dict(desc=f'Sheets in {self.directory}')
             if tqdm_kwargs:
                 _tqdm_kwargs.update(tqdm_kwargs)
             paths = tqdm(list(paths), **_tqdm_kwargs)
