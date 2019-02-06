@@ -26,11 +26,15 @@ class BELSheetsRepository:
     """A repository of BEL curation sheets."""
 
     directory: str
-    output_directory: str
+    output_directory: Optional[str] = None
     metadata: Optional[Mapping[str, str]] = None
 
     pickle_name: str = 'sheets.bel.pickle'
     json_name: str = 'sheets.bel.json'
+
+    def __post_init__(self) -> None:
+        if self.output_directory is None:
+            self.output_directory = self.directory
 
     @property
     def _cache_pickle_path(self) -> str:
