@@ -33,7 +33,8 @@ class BELSheetsRepository:
     json_name = 'sheets.bel.json'
 
     @property
-    def _cache_pickle_path(self):
+    def _cache_pickle_path(self) -> str:
+        # TODO convert to field and use __post_init__?
         return os.path.join(self.output_directory, self.pickle_name)
 
     def get_graph(self,
