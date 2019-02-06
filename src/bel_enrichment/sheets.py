@@ -71,18 +71,22 @@ def process_row(graph: BELGraph, bel_parser: BELParser, row: Dict, line_number: 
     bel_parser.control_parser.evidence = row['Evidence']
     # TODO set annotations if they exist
 
-    # Set annotations
-    bel_parser.control_parser.annotations.update({
+    annotations = {
         'Curator': row['Curator'],
-        'INDRA_UUID': row['INDRA UUID'],
         'Confidence': 'Medium',  # needs re-curation
+    }
 
-    })
+    if 'INDRA UUID' in row:
+        annotations['INDRA_UUID'] = row['INDRA UUID']
+
     if 'Belief' in row:
-        bel_parser.control_parser.annotations['INDRA_Belief'] = row['Belief']
+        annotations['INDRA_Belief'] = row['Belief']
 
     if 'API' in row:
-        bel_parser.control_parser.annotations['INDRA_API'] = row['API']
+        annotations['INDRA_API'] = row['API']
+
+    # Set annotations
+    bel_parser.control_parser.annotations.update(annotations)
 
     sub = row['Subject']
     obj = row['Object']
