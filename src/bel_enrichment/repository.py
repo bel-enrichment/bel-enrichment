@@ -29,8 +29,8 @@ class BELSheetsRepository:
     output_directory: str
     metadata: Optional[Mapping[str, str]] = None
 
-    pickle_name = 'sheets.bel.pickle'
-    json_name = 'sheets.bel.json'
+    pickle_name: str = 'sheets.bel.pickle'
+    json_name: str = 'sheets.bel.json'
 
     @property
     def _cache_pickle_path(self) -> str:
