@@ -32,7 +32,7 @@ class BELSheetsRepository:
     pickle_name: str = 'sheets.bel.pickle'
     json_name: str = 'sheets.bel.json'
 
-    def __post_init__(self) -> None:
+    def __post_init__(self) -> None:  # noqa: D105
         if self.output_directory is None:
             self.output_directory = self.directory
 

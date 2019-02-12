@@ -4,6 +4,7 @@
 
 import logging
 from collections import namedtuple
+from itertools import repeat
 from operator import attrgetter
 from typing import Iterable, List, Optional, TextIO, Tuple, Union
 
@@ -17,6 +18,7 @@ from pybel.constants import ANNOTATIONS, CITATION, CITATION_REFERENCE, EVIDENCE,
 
 __all__ = [
     'get_and_write_statements',
+    'get_and_write_statements_from_pmids',
     'get_rows_from_statement',
     'get_rows_from_statements',
     'get_graph_from_statement',
@@ -69,7 +71,39 @@ def get_and_write_statements(agents: Union[str, List[str]],
     if isinstance(agents, str):
         agents = [agents]
 
-    statements = indra_db_rest.get_statements(agents=agents)
+    processor = indra_db_rest.get_statements(agents=agents)
+    statements = processor.statements
+
+    print_statements(
+        statements,
+        file=file,
+        sep=sep,
+        limit=limit,
+        duplicates=duplicates,
+        minimum_belief=minimum_belief,
+    )
+
+    return statements
+
+
+def get_and_write_statements_from_pmids(pmids: List[str],
+                                        file: Optional[TextIO] = None,
+                                        sep: Optional[str] = None,
+                                        limit: Optional[int] = None,
+                                        duplicates: bool = False,
+                                        minimum_belief: Optional[float] = None,
+                                        ) -> List[Statement]:
+    """Get INDRA statements for the given agents and write the to a TSV for BEL curation.
+
+    :param pmids: A list of PubMed identifiers
+    :param file: The file to write to
+    :param sep: The separator for the CSV. Defaults to a tab.
+    :param limit: The optional limit of statements to write
+    :param duplicates: should duplicate statements be written (with multiple evidences?)
+    :param minimum_belief: The minimum belief score to keep
+    """
+    ids = list(zip(repeat('pmid'), pmids))
+    statements = indra_db_rest.get_statements_for_paper(ids=ids)
 
     print_statements(
         statements,

@@ -3,10 +3,15 @@
 """The command line interface for BEL enrichment."""
 
 import os
+import pickle
+import sys
+from typing import BinaryIO, TextIO
 
 import click
 
+from pybel import BELGraph
 from pybel.cli import graph_pickle_argument
+from .indra_utils import get_and_write_statements_from_pmids
 from .ranking import process_rank_genes
 from .workflow import export_separate
 
@@ -33,7 +38,7 @@ def main():
 @graph_pickle_argument
 @click.option('-n', '--number', type=int)
 @click.option('-s', '--sep', default='\t')
-def ranks(graph, number, sep):
+def ranks(graph: BELGraph, number, sep):
     """Rank the genes in a graph."""
     gene_map = process_rank_genes(graph)
     for (namespace, name), rank in gene_map.most_common(n=number):
@@ -45,14 +50,33 @@ def ranks(graph, number, sep):
 @click.option('-d', '--directory', type=click.Path(file_okay=False, dir_okay=True), default=os.getcwd())
 @info_cutoff_option
 @belief_cutoff_option
-def make_sheet(graph, directory, info_cutoff, belief_cutoff):
-    """Rank the genes in a graph."""
+def make_sheet(graph: BELGraph, directory: str, info_cutoff: float, belief_cutoff: float):
+    """Make a rational enrichment curation sheet."""
     export_separate(
         graph=graph,
         directory=directory,
         minimum_information_density=info_cutoff,
         minimum_belief=belief_cutoff,
     )
+
+
+@main.command()
+@click.option('--pmids', type=click.File('r'), default=sys.stdin, help='a text file with one PMID per line')
+@click.option('--output', type=click.File('w'), default=sys.stdout, help='output file')
+@click.option('--pickle-file', type=click.File('wb'), help='output file')
+@belief_cutoff_option
+def from_pmids(pmids: TextIO, output: TextIO, pickle_file: BinaryIO, belief_cutoff: float):
+    """Make a sheet for the given PMIDs."""
+    pmids = [pmid.strip() for pmid in pmids]
+    statements = get_and_write_statements_from_pmids(
+        pmids=pmids,
+        file=output,
+        duplicates=True,
+        minimum_belief=belief_cutoff,
+    )
+
+    if pickle_file:
+        pickle.dump(statements, pickle_file)
 
 
 if __name__ == '__main__':

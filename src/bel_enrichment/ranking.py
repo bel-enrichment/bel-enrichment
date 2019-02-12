@@ -2,7 +2,7 @@
 
 """Utilities for finding interesting and novel nodes around which to expand curation."""
 
-from collections import Counter
+from typing import Counter, Tuple
 
 from pybel import BELGraph, Pipeline
 from pybel.constants import ABUNDANCE
@@ -38,7 +38,7 @@ process_graph: Pipeline = Pipeline.from_functions([
 ])
 
 
-def rank_genes(graph: BELGraph) -> Counter:
+def rank_genes(graph: BELGraph) -> Counter[Tuple[str, str]]:
     r"""Rank the genes by their inverse sum of in- and out-degrees.
 
     .. math:: rank(n) = \frac{1}{1 + degree_{in}(n) + degree_{out}(n)}
