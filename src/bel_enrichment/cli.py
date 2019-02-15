@@ -5,13 +5,13 @@
 import os
 import pickle
 import sys
-from typing import BinaryIO, TextIO
+from typing import BinaryIO, List, TextIO
 
 import click
 
 from pybel import BELGraph
 from pybel.cli import graph_pickle_argument
-from .indra_utils import get_and_write_statements_from_pmids
+from .indra_utils import get_and_write_statements_from_agents, get_and_write_statements_from_pmids
 from .ranking import process_rank_genes
 from .workflow import export_separate
 
@@ -60,18 +60,43 @@ def make_sheet(graph: BELGraph, directory: str, info_cutoff: float, belief_cutof
     )
 
 
+output_option = click.option('--output', type=click.File('w'), default=sys.stdout, help='output file')
+pickle_output_option = click.option('--pickle-file', type=click.File('wb'), help='output file')
+no_duplicates_option = click.option('--no-duplicates', is_flag=True)
+
+
+@main.command()
+@click.option('-a', '--agents', multiple=True)
+@output_option
+@pickle_output_option
+@belief_cutoff_option
+@no_duplicates_option
+def from_agents(agents: List[str], output: TextIO, pickle_file: BinaryIO, belief_cutoff: float, no_duplicates: bool):
+    """Make a sheet for the given agents."""
+    statements = get_and_write_statements_from_agents(
+        agents=agents,
+        file=output,
+        duplicates=(not no_duplicates),
+        minimum_belief=belief_cutoff,
+    )
+
+    if pickle_file:
+        pickle.dump(statements, pickle_file)
+
+
 @main.command()
 @click.option('--pmids', type=click.File('r'), default=sys.stdin, help='a text file with one PMID per line')
-@click.option('--output', type=click.File('w'), default=sys.stdout, help='output file')
-@click.option('--pickle-file', type=click.File('wb'), help='output file')
+@output_option
+@pickle_output_option
 @belief_cutoff_option
-def from_pmids(pmids: TextIO, output: TextIO, pickle_file: BinaryIO, belief_cutoff: float):
+@no_duplicates_option
+def from_pmids(pmids: TextIO, output: TextIO, pickle_file: BinaryIO, belief_cutoff: float, no_duplicates: bool):
     """Make a sheet for the given PMIDs."""
     pmids = [pmid.strip() for pmid in pmids]
     statements = get_and_write_statements_from_pmids(
         pmids=pmids,
         file=output,
-        duplicates=True,
+        duplicates=(not no_duplicates),
         minimum_belief=belief_cutoff,
     )
 

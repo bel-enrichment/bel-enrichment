@@ -12,12 +12,11 @@ from indra.assemblers.pybel import PybelAssembler
 from indra.sources import indra_db_rest
 from indra.statements import Evidence, Statement
 from indra.tools.assemble_corpus import filter_belief, run_preassembly
-
 from pybel import BELGraph
 from pybel.constants import ANNOTATIONS, CITATION, CITATION_REFERENCE, EVIDENCE, RELATION, UNQUALIFIED_EDGES
 
 __all__ = [
-    'get_and_write_statements',
+    'get_and_write_statements_from_agents',
     'get_and_write_statements_from_pmids',
     'get_rows_from_statement',
     'get_rows_from_statements',
@@ -52,13 +51,14 @@ SOURCE_BLACKLIST = {'bel', 'signor'}
 SUBSTRING_BLACKLIST = {'CHEBI', 'PUBCHEM', 'act(bp('}
 
 
-def get_and_write_statements(agents: Union[str, List[str]],
-                             file: Optional[TextIO] = None,
-                             sep: Optional[str] = None,
-                             limit: Optional[int] = None,
-                             duplicates: bool = False,
-                             minimum_belief: Optional[float] = None,
-                             ) -> List[Statement]:
+def get_and_write_statements_from_agents(
+        agents: Union[str, List[str]],
+        file: Optional[TextIO] = None,
+        sep: Optional[str] = None,
+        limit: Optional[int] = None,
+        duplicates: bool = False,
+        minimum_belief: Optional[float] = None,
+) -> List[Statement]:
     """Get INDRA statements for the given agents and write the to a TSV for BEL curation.
 
     :param agents: A list of agents (HGNC gene symbols)
@@ -86,13 +86,14 @@ def get_and_write_statements(agents: Union[str, List[str]],
     return statements
 
 
-def get_and_write_statements_from_pmids(pmids: List[str],
-                                        file: Optional[TextIO] = None,
-                                        sep: Optional[str] = None,
-                                        limit: Optional[int] = None,
-                                        duplicates: bool = False,
-                                        minimum_belief: Optional[float] = None,
-                                        ) -> List[Statement]:
+def get_and_write_statements_from_pmids(
+        pmids: List[str],
+        file: Optional[TextIO] = None,
+        sep: Optional[str] = None,
+        limit: Optional[int] = None,
+        duplicates: bool = False,
+        minimum_belief: Optional[float] = None,
+) -> List[Statement]:
     """Get INDRA statements for the given agents and write the to a TSV for BEL curation.
 
     :param pmids: A list of PubMed identifiers
@@ -117,13 +118,14 @@ def get_and_write_statements_from_pmids(pmids: List[str],
     return statements
 
 
-def print_statements(statements: List[Statement],
-                     file: Optional[TextIO] = None,
-                     sep: Optional[str] = None,
-                     limit: Optional[int] = None,
-                     duplicates: bool = False,
-                     minimum_belief: Optional[float] = None,
-                     ):
+def print_statements(
+        statements: List[Statement],
+        file: Optional[TextIO] = None,
+        sep: Optional[str] = None,
+        limit: Optional[int] = None,
+        duplicates: bool = False,
+        minimum_belief: Optional[float] = None,
+) -> None:
     """Write statements to a CSV for curation.
 
     This one is similar to the other one, but sorts by the BEL string and only keeps the first for each group.

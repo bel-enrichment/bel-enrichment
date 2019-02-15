@@ -9,7 +9,7 @@ from typing import List, Optional, TextIO
 from indra.statements import Statement
 
 from pybel import BELGraph
-from .indra_utils import get_and_write_statements
+from .indra_utils import get_and_write_statements_from_agents
 from .ranking import process_rank_genes
 
 __all__ = [
@@ -42,7 +42,7 @@ def export_separate(graph: BELGraph,
             continue  # already downloaded
 
         with open(tsv_path, 'w') as csv_file:
-            statements = get_and_write_statements(
+            statements = get_and_write_statements_from_agents(
                 agents=gene_symbol,
                 file=csv_file,
                 sep=sep,
@@ -64,7 +64,7 @@ def export_single(graph: BELGraph,
     """Get genes from the graph and export as one file."""
     gene_symbols = get_gene_symbols(graph=graph, cutoff=cutoff)
 
-    return get_and_write_statements(
+    return get_and_write_statements_from_agents(
         agents=gene_symbols,
         file=file,
         sep=sep,
