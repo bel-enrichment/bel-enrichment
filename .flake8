@@ -30,6 +30,7 @@ application-import-names =
     bel_enrichment
     bel_repository
     pybel
+    indra
 
 # mccabe
 max-complexity = 10

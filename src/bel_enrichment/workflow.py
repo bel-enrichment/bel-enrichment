@@ -7,7 +7,6 @@ import pickle
 from typing import List, Optional, TextIO
 
 from indra.statements import Statement
-
 from pybel import BELGraph
 from .indra_utils import get_and_write_statements_from_agents
 from .ranking import process_rank_genes
