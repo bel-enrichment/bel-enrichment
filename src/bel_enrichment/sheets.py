@@ -46,7 +46,7 @@ def _check_curation_template_columns(df: pd.DataFrame, path: str) -> bool:
     return True
 
 
-def process_row(graph: BELGraph, bel_parser: BELParser, row: Dict, line_number: int) -> None:
+def process_row(bel_parser: BELParser, row: Dict, line_number: int) -> None:
     """Process a row."""
     if not row['Checked']:  # don't use unchecked material
         return
@@ -97,9 +97,9 @@ def process_row(graph: BELGraph, bel_parser: BELParser, row: Dict, line_number: 
     try:
         bel_parser.parseString(bel, line_number=line_number)
     except BELParserWarning as exc:
-        graph.add_warning(exc)
-    except pyparsing.ParseException as e:
-        graph.add_warning(BELSyntaxError(line_number=line_number, line=bel, position=e.loc))
+        bel_parser.graph.add_warning(exc)
+    except pyparsing.ParseException as exc:
+        bel_parser.graph.add_warning(BELSyntaxError(line_number=line_number, line=bel, position=exc.loc))
 
 
 def generate_error_types(path: str) -> Tuple[Mapping[str, int], str]:
@@ -145,17 +145,14 @@ def generate_curation_report(path: str) -> dict:
     curation_results = defaultdict(int)
 
     for line, row in df.iterrows():
-
-        checked = row.get('Checked')
-        correct = row.get('Correct')
-        changed = row.get('Changed')
-
         evidence = row.get('Evidence')
-
         if evidence == 'No evidence text.':
             logger.debug('No evidence text. Skipping...')
             continue
 
+        checked = row.get('Checked')
+        correct = row.get('Correct')
+        changed = row.get('Changed')
         # Transform real values ('x' and'NaN') to Trues and Falses
         checked = pd.notnull(checked)
         correct = pd.notnull(correct)
@@ -178,7 +175,7 @@ def generate_curation_report(path: str) -> dict:
             curation_results[MODIFIED_BY_CURATOR] += 1
 
         elif changed and correct:
-            logger.warning('Conflict in row {}'.format(line))
+            logger.warning(f'Conflict in row {line}')
 
         # Statement has been modified by the curator but WAS NOT the original one
         elif changed:
@@ -189,7 +186,7 @@ def generate_curation_report(path: str) -> dict:
     return dict(curation_results)
 
 
-def generate_curation_summary(input_directory: str, output_directory: str, use_tqdm: bool = True):
+def generate_curation_summary(input_directory: str, output_directory: str, use_tqdm: bool = True) -> None:
     """Generate a summary of the curation results on excel."""
     summary_excel_rows = {}
     error_excel_rows = {}
@@ -197,17 +194,16 @@ def generate_curation_summary(input_directory: str, output_directory: str, use_t
     paths = get_sheets_paths(input_directory)
     if use_tqdm:
         paths = tqdm(list(paths), desc='Generating curation report')
+
     for path in paths:
         gene_symbol = path.split('/')[-2]
 
         # Subfolder name (Gene Symbol) -> dictionary results
-        summary = generate_curation_report(path)
+        summary_excel_rows[gene_symbol] = generate_curation_report(path)
 
-        error_types, curator = generate_error_types(path)
+        error_types, _ = generate_error_types(path)
 
         error_excel_rows[gene_symbol] = error_types
-
-        summary_excel_rows[gene_symbol] = summary
 
     # Export Summary Report
     df_summary = pd.DataFrame.from_dict(summary_excel_rows, orient='index')
