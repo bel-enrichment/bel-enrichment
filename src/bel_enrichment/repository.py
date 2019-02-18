@@ -10,6 +10,7 @@ from typing import Any, Mapping, Optional
 import pandas as pd
 from tqdm import tqdm
 
+from bel_repository import BELMetadata
 from pybel import BELGraph, from_pickle, to_json_path, to_pickle
 from pybel.parser import BELParser
 from .sheets import _check_curation_template_columns, generate_curation_summary, get_sheets_paths, process_row
@@ -27,7 +28,7 @@ class BELSheetsRepository:
 
     directory: str
     output_directory: Optional[str] = None
-    metadata: Optional[Mapping[str, str]] = None
+    metadata: BELMetadata = None
 
     pickle_name: str = 'sheets.bel.pickle'
     json_name: str = 'sheets.bel.json'
@@ -53,7 +54,10 @@ class BELSheetsRepository:
         if use_cached and self._cache_pickle_path is not None and os.path.exists(self._cache_pickle_path):
             return from_pickle(self._cache_pickle_path)
 
-        graph = BELGraph(**(self.metadata or {}))
+        graph = BELGraph()
+        if self.metadata is not None:
+            self.metadata.update(graph)
+
         logger.info('streamlining parser')
         bel_parser = BELParser(graph)
 
