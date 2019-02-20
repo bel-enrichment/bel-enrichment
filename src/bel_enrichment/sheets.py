@@ -48,6 +48,7 @@ def _check_curation_template_columns(df: pd.DataFrame, path: str) -> bool:
 
 def process_row(bel_parser: BELParser, row: Dict, line_number: int) -> None:
     """Process a row."""
+
     if not row['Checked']:  # don't use unchecked material
         return
 
@@ -93,6 +94,9 @@ def process_row(bel_parser: BELParser, row: Dict, line_number: int) -> None:
 
     # Build a BEL statement and parse it
     bel = f"{sub} {row['Predicate']} {obj}"
+
+    # Cast line number from numpy.int64 to integer since JSON cannot handle this class
+    line_number = int(line_number)
 
     try:
         bel_parser.parseString(bel, line_number=line_number)
