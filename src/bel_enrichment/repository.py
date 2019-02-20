@@ -7,11 +7,11 @@ import os
 import sys
 from collections import defaultdict
 from dataclasses import dataclass, field
+from typing import Any, Iterable, Mapping, Optional, Union
 
 import click
 import pandas as pd
 from tqdm import tqdm
-from typing import Any, Iterable, Mapping, Optional, Union
 
 from bel_repository import BELMetadata, BELRepository
 from pybel import BELGraph, from_pickle, to_json_path, to_pickle
@@ -187,7 +187,7 @@ class BELSheetsRepository:
                 print(pybel_tools.assembler.html.to_html(graph), file=file)
 
 
-def assign_subgraphs(graph: BELGraph, prior: BELGraph,  annotation: str = 'Subgraph') -> None:
+def assign_subgraphs(graph: BELGraph, prior: BELGraph, annotation: str = 'Subgraph') -> None:
     """Assign the sub-graphs to edges in the graph based on edges in the prior."""
     node_to_subgraph = defaultdict(set)
     for u, v, d in prior.edges(data=True):

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Summary utilities."""
+
 import typing
 from collections import Counter
 

@@ -11,7 +11,6 @@ import pandas as pd
 import pyparsing
 from tqdm import tqdm
 
-from pybel import BELGraph
 from pybel.constants import CITATION_REFERENCE, CITATION_TYPE, CITATION_TYPE_PUBMED
 from pybel.parser import BELParser
 from pybel.parser.exc import BELParserWarning, BELSyntaxError
@@ -48,7 +47,6 @@ def _check_curation_template_columns(df: pd.DataFrame, path: str) -> bool:
 
 def process_row(bel_parser: BELParser, row: Dict, line_number: int) -> None:
     """Process a row."""
-
     if not row['Checked']:  # don't use unchecked material
         return
 
