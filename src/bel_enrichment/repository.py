@@ -152,13 +152,13 @@ class BELSheetsRepository:
 
             # summarize API
             indra_api_histogram = count_indra_apis(graph)
-
-            click.secho('Readers Used', fg='cyan', bold=True)
-            api_size = max(len(api) for api in indra_api_histogram)
-            for api, count in indra_api_histogram.most_common():
-                click.echo(f'  {api:{api_size}}: {count}')
-            indra_api_df = pd.DataFrame.from_dict(indra_api_histogram, orient='index')
-            indra_api_df.to_csv(os.path.join(repo.output_directory, 'api_summary.tsv'), sep='\t')
+            if indra_api_histogram:
+                api_size = max(len(api) for api in indra_api_histogram)
+                click.secho('Readers Used', fg='cyan', bold=True)
+                for api, count in indra_api_histogram.most_common():
+                    click.echo(f'  {api:{api_size}}: {count}')
+                indra_api_df = pd.DataFrame.from_dict(indra_api_histogram, orient='index')
+                indra_api_df.to_csv(os.path.join(repo.output_directory, 'api_summary.tsv'), sep='\t')
 
             if repo.prior is not None:
                 prior = repo.get_prior()
