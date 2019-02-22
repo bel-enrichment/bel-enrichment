@@ -93,7 +93,11 @@ class BELSheetsRepository:
             paths = tqdm(list(paths), **_tqdm_kwargs)
 
         for path in paths:
-            df = pd.read_excel(path)
+            try:
+                df = pd.read_excel(path)
+            except LookupError as exc:
+                logger.warning(f'Error opening {path}: {exc}')
+                continue
 
             # Check columns in DataFrame exist
             if not _check_curation_template_columns(df, path):

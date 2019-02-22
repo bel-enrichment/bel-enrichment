@@ -138,7 +138,11 @@ def generate_curation_report(path: str) -> dict:
     :param path: path to the excel file
     :return: summary of the curation
     """
-    df = pd.read_excel(path)
+    try:
+        df = pd.read_excel(path)
+    except LookupError as exc:
+        logger.warning(f'Error opening {path}: {exc}')
+        return {}
 
     # Check columns in dataframe exist
     if not _check_curation_template_columns(df, path):
@@ -205,7 +209,10 @@ def generate_curation_summary(input_directory: str,
         gene_symbol = path.split('/')[-2]
 
         # Subfolder name (Gene Symbol) -> dictionary results
-        summary_excel_rows[gene_symbol] = generate_curation_report(path)
+        d = summary_excel_rows[gene_symbol] = generate_curation_report(path)
+        if not d:
+            logger.warning(f'Missing sheet, skipping curation report for {path}')
+            continue
 
         error_types, _ = generate_error_types(path)
 
