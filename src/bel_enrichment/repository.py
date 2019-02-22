@@ -151,11 +151,12 @@ class BELSheetsRepository:
                 click.secho('Error: empty graph', fg='red')
                 sys.exit(-1)
 
+            click.secho('Summary', fg='cyan', bold=True)
             graph.summarize()
 
             if graph.warnings:
                 number_errored_documents = len({path for path, _, _ in graph.warnings})
-                click.secho(f'Warnings: {number_errored_documents} documents')
+                click.secho(f'Warnings: {number_errored_documents} documents', fg='red')
                 if show_warnings:
                     echo_warnings_via_pager(graph.warnings)
                     sys.exit(-1)
