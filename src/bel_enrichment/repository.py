@@ -19,7 +19,7 @@ from pybel.cli import echo_warnings_via_pager
 from pybel.constants import ANNOTATIONS, CITATION
 from pybel.parser import BELParser
 from pybel.struct import get_subgraphs_by_annotation
-from .sheets import _check_curation_template_columns, generate_curation_summary, get_sheets_paths, process_row
+from .sheets import _check_curation_template_columns, generate_curation_summary, iterate_sheets_paths, process_row
 from .summary import count_indra_apis
 
 __all__ = [
@@ -38,6 +38,7 @@ class BELSheetsRepository:
     metadata: BELMetadata = None
     prior: Union[None, BELGraph, BELRepository] = None
 
+    sheet_suffix: str = '_curation.xlsx'
     pickle_name: str = 'sheets.bel.pickle'
     json_name: str = 'sheets.bel.json'
 
@@ -62,7 +63,7 @@ class BELSheetsRepository:
 
     def iterate_sheets_paths(self) -> Iterable[str]:
         """Iterate over the paths to all sheets."""
-        return get_sheets_paths(self.directory)
+        return iterate_sheets_paths(self.directory, suffix=self.sheet_suffix)
 
     def get_graph(self,
                   use_cached: bool = True,
@@ -116,6 +117,7 @@ class BELSheetsRepository:
         return generate_curation_summary(
             input_directory=self.directory,
             output_directory=self.output_directory,
+            sheet_suffix=self.sheet_suffix,
         )
 
     def build_cli(self) -> click.Group:  # noqa: D202

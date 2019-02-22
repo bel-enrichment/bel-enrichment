@@ -5,7 +5,7 @@
 import logging
 import os
 from collections import defaultdict
-from typing import Dict, Iterable, Mapping, Tuple
+from typing import Dict, Iterable, Mapping, Optional, Tuple
 
 import pandas as pd
 import pyparsing
@@ -188,12 +188,16 @@ def generate_curation_report(path: str) -> dict:
     return dict(curation_results)
 
 
-def generate_curation_summary(input_directory: str, output_directory: str, use_tqdm: bool = True) -> None:
+def generate_curation_summary(input_directory: str,
+                              output_directory: str,
+                              use_tqdm: bool = True,
+                              sheet_suffix: Optional[str] = None,
+                              ) -> None:
     """Generate a summary of the curation results on excel."""
     summary_excel_rows = {}
     error_excel_rows = {}
 
-    paths = get_sheets_paths(input_directory)
+    paths = iterate_sheets_paths(input_directory, suffix=sheet_suffix)
     if use_tqdm:
         paths = tqdm(list(paths), desc='Generating curation report')
 
@@ -220,16 +224,13 @@ def generate_curation_summary(input_directory: str, output_directory: str, use_t
     df_error.to_csv(os.path.join(output_directory, 'error_types.csv'))
 
 
-def get_sheets_paths(directory: str) -> Iterable[str]:
+def iterate_sheets_paths(directory: str, suffix: Optional[str] = None) -> Iterable[str]:
     """List the excel curation sheets."""
+    if suffix is None:
+        suffix = '_curated.xlsx'
     for path in os.listdir(directory):
-        folder = os.path.join(directory, path)
-        if not (os.path.isdir(folder) and path.startswith('enrichment-')):
-            continue
-        for subpath in os.listdir(folder):
-            subfolder = os.path.join(folder, subpath)
-            if not os.path.isdir(subfolder):
-                continue
-            curated_path = os.path.join(subfolder, f'{subpath}_curated.xlsx')
-            if os.path.exists(curated_path):
-                yield curated_path
+        subpath = os.path.join(directory, path)
+        if os.path.isdir(subpath):
+            yield from iterate_sheets_paths(subpath, suffix=suffix)
+        elif subpath.endswith(suffix):
+            yield subpath
