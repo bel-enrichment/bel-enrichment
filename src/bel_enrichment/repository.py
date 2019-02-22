@@ -143,6 +143,10 @@ class BELSheetsRepository:
         def compile(repo: BELSheetsRepository, show_warnings: bool, reload: bool):
             """Generate all results and summaries."""
             graph = repo.get_graph(use_cached=(not reload), use_tqdm=True)
+            if 0 == graph.number_of_nodes():
+                click.secho('Error: empty graph', fg='red')
+                sys.exit(-1)
+
             graph.summarize()
 
             if graph.warnings:
