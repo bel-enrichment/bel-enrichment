@@ -6,20 +6,25 @@ import logging
 import os
 import sys
 from collections import defaultdict
-from dataclasses import dataclass, field
 from typing import Any, Iterable, Mapping, Optional, Union
 
 import click
 import pandas as pd
-from tqdm import tqdm
-
 from bel_repository import BELMetadata, BELRepository
+from dataclasses import dataclass, field
 from pybel import BELGraph, from_pickle, to_json_path, to_pickle
 from pybel.cli import echo_warnings_via_pager
 from pybel.constants import ANNOTATIONS, CITATION
 from pybel.parser import BELParser
 from pybel.struct import get_subgraphs_by_annotation
-from .sheets import _check_curation_template_columns, generate_curation_summary, iterate_sheets_paths, process_row
+from tqdm import tqdm
+
+from .sheets import (
+    _check_curation_template_columns,
+    generate_curation_summary,
+    iterate_sheets_paths,
+    process_row
+)
 from .summary import count_indra_apis
 
 __all__ = [
