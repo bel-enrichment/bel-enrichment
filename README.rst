@@ -5,7 +5,7 @@ A package for generating curation sheets for rationally enriching a BEL graph.
 If you find ``bel_enrichment`` useful in your work, please consider citing [1]_:
 
 .. [1] Hoyt, C. T., *et al* (2019). `Re-curation and Rational Enrichment of Knowledge Graphs in
-       Biological Expression Language <https://doi.org/10.1101/536409>`_. *bioRxiv*, 536409.
+       Biological Expression Language <https://doi.org/10.1093/database/baz068>`_. *Database*, Volume 2019, 2019, baz068.
 
 Additionally, this package also heavily builds on INDRA [2]_ and PyBEL [3]_.
 
