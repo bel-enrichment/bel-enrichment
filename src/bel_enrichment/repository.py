@@ -193,13 +193,17 @@ class BELSheetsRepository:
             repo.generate_curation_summary()
 
         @main.command()
-        @click.option('-p', '--path', type=click.Path())
+        @click.argument('file', type=click.File('w'))
         @click.pass_obj
-        def html(repo: BELSheetsRepository, path: str):
+        def html(repo: BELSheetsRepository, file):
             """Generate an HTML summary of the content."""
             graph = repo.get_graph()
-            import pybel_tools.assembler.html
-            with open(path or os.path.join(repo.output_directory, 'docs', 'index.html'), 'w') as file:
+            try:
+                import pybel_tools.assembler.html
+            except ImportError:
+                click.secho('Missing pybel-tools', fg='red')
+                sys.exit(1)
+            else:
                 print(pybel_tools.assembler.html.to_html(graph), file=file)
 
 
