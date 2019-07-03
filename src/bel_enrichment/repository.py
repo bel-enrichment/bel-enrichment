@@ -147,7 +147,7 @@ class BELSheetsRepository:
     def build_cli(self) -> click.Group:  # noqa: D202
         """Build a command line interface."""
 
-        @click.group(help=f'Tools for the BEL repository at {self.directory}')
+        @click.group(help=f'Tools for the BEL repository at {self.directory} v{self.metadata.version}')
         @click.pass_context
         def main(ctx):
             """Group the commands."""
@@ -163,10 +163,11 @@ class BELSheetsRepository:
         @main.command()
         @click.option('-w', '--show-warnings', is_flag=True)
         @click.option('-r', '--reload', is_flag=True)
+        @click.option('-p', '--enrich-citations', is_flag=True)
         @click.pass_obj
-        def compile(repo: BELSheetsRepository, show_warnings: bool, reload: bool):
+        def compile(repo: BELSheetsRepository, show_warnings: bool, reload: bool, enrich_citations: bool):
             """Generate all results and summaries."""
-            graph = repo.get_graph(use_cached=(not reload), use_tqdm=True)
+            graph = repo.get_graph(use_cached=(not reload), use_tqdm=True, enrich_citations=enrich_citations)
             if 0 == graph.number_of_nodes():
                 click.secho('Error: empty graph', fg='red')
                 sys.exit(-1)
