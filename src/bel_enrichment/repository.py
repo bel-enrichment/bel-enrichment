@@ -6,25 +6,22 @@ import logging
 import os
 import sys
 from collections import defaultdict
-from typing import Any, Iterable, Mapping, Optional, Union
+from dataclasses import dataclass, field
+from typing import Any, Iterable, Mapping, Optional, Tuple, Union
 
 import click
 import pandas as pd
-from bel_repository import BELMetadata, BELRepository
-from dataclasses import dataclass, field
-from pybel import BELGraph, from_pickle, to_json_path, to_pickle
-from pybel.cli import echo_warnings_via_pager
-from pybel.constants import ANNOTATIONS, CITATION
-from pybel.parser import BELParser
-from pybel.struct import get_subgraphs_by_annotation
 from tqdm import tqdm
 
-from .sheets import (
-    _check_curation_template_columns,
-    generate_curation_summary,
-    iterate_sheets_paths,
-    process_row
-)
+from bel_repository import BELMetadata, BELRepository
+from pybel import BELGraph, from_pickle, to_json_path, to_pickle
+from pybel import Manager
+from pybel.cli import echo_warnings_via_pager
+from pybel.constants import ANNOTATIONS, CITATION
+from pybel.manager.citation_utils import enrich_pubmed_citations
+from pybel.parser import BELParser
+from pybel.struct import get_subgraphs_by_annotation
+from .sheets import _check_curation_template_columns, generate_curation_summary, iterate_sheets_paths, process_row
 from .summary import count_indra_apis
 
 __all__ = [
@@ -43,11 +40,12 @@ class BELSheetsRepository:
     metadata: BELMetadata = None
     prior: Union[None, BELGraph, BELRepository] = None
 
-    sheet_suffix: str = '_curation.xlsx'
+    sheet_suffix: Union[str, Tuple[str]] = field(default=('_curation.xlsx', '_curated.xlsx'))
     pickle_name: str = 'sheets.bel.pickle'
     json_name: str = 'sheets.bel.json'
 
     _cache_pickle_path: str = field(init=False)
+    _cache_json_path: str = field(init=False)
 
     def __post_init__(self) -> None:  # noqa: D105
         if self.output_directory is None:
@@ -56,6 +54,7 @@ class BELSheetsRepository:
         os.makedirs(self.output_directory, exist_ok=True)
 
         self._cache_pickle_path = os.path.join(self.output_directory, self.pickle_name)
+        self._cache_json_path = os.path.join(self.output_directory, self.json_name)
 
     def get_prior(self) -> BELGraph:
         """Get the prior graph or load it."""
@@ -68,13 +67,20 @@ class BELSheetsRepository:
 
     def iterate_sheets_paths(self) -> Iterable[str]:
         """Iterate over the paths to all sheets."""
-        return iterate_sheets_paths(self.directory, suffix=self.sheet_suffix)
+        if isinstance(self.sheet_suffix, str):
+            yield from iterate_sheets_paths(directory=self.directory, suffix=self.sheet_suffix)
+        else:
+            for s in self.sheet_suffix:
+                yield from iterate_sheets_paths(directory=self.directory, suffix=s)
 
-    def get_graph(self,
-                  use_cached: bool = True,
-                  use_tqdm: bool = False,
-                  tqdm_kwargs: Optional[Mapping[str, Any]] = None,
-                  ) -> BELGraph:
+    def get_graph(
+            self,
+            use_cached: bool = True,
+            use_tqdm: bool = False,
+            manager: Optional[Manager] = None,
+            tqdm_kwargs: Optional[Mapping[str, Any]] = None,
+            enrich_citations: bool = False,
+    ) -> BELGraph:
         """Get the BEL graph from all sheets in this repository.
 
         .. warning:: This BEL graph isn't pre-filled with namespace and annotation URLs.
@@ -89,7 +95,7 @@ class BELSheetsRepository:
         logger.info('streamlining parser')
         bel_parser = BELParser(graph)
 
-        paths = self.iterate_sheets_paths()
+        paths = list(self.iterate_sheets_paths())
 
         if use_tqdm:
             _tqdm_kwargs = dict(desc=f'Sheets in {self.directory}')
@@ -110,15 +116,24 @@ class BELSheetsRepository:
 
             graph.path = path
 
-            for line_number, row in df.iterrows():
+            it = df.iterrows()
+            if use_tqdm:
+                it = tqdm(it, total=len(df.index), leave=False, desc=f'Reading {path}')
+            for line_number, row in it:
                 process_row(bel_parser=bel_parser, row=row, line_number=line_number)
 
         if self.prior is not None:  # assign edges to sub-graphs
             prior = self.get_prior()
             assign_subgraphs(graph=graph, prior=prior)
 
+        if enrich_citations:
+            if manager is None:
+                manager = Manager()
+            enrich_pubmed_citations(graph=graph, manager=manager)
+
         to_pickle(graph, self._cache_pickle_path)
-        to_json_path(graph, os.path.join(self.output_directory, self.json_name), indent=2)
+        to_json_path(graph, self._cache_json_path, indent=2, sort_keys=True)
+
         return graph
 
     def generate_curation_summary(self):
@@ -157,7 +172,7 @@ class BELSheetsRepository:
                 sys.exit(-1)
 
             click.secho('Summary', fg='cyan', bold=True)
-            graph.summarize()
+            click.echo(graph.summary_str())
 
             if graph.warnings:
                 number_errored_documents = len({path for path, _, _ in graph.warnings})
@@ -205,6 +220,13 @@ class BELSheetsRepository:
                 sys.exit(1)
             else:
                 print(pybel_tools.assembler.html.to_html(graph), file=file)
+
+        @main.command()
+        @click.pass_obj
+        def ls(repo: BELSheetsRepository):
+            """Print all curated sheets."""
+            for path in repo.iterate_sheets_paths():
+                click.echo(path)
 
 
 def assign_subgraphs(graph: BELGraph, prior: BELGraph, annotation: str = 'Subgraph') -> None:

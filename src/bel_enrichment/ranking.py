@@ -2,6 +2,7 @@
 
 """Utilities for finding interesting and novel nodes around which to expand curation."""
 
+import collections
 from typing import Counter, Tuple
 
 from pybel import BELGraph, Pipeline
@@ -43,11 +44,11 @@ def rank_genes(graph: BELGraph) -> Counter[Tuple[str, str]]:
 
     .. math:: rank(n) = \frac{1}{1 + degree_{in}(n) + degree_{out}(n)}
     """
-    return Counter(dict(
-        ((node.namespace, node.name), 1 / (1 + degree))
+    return collections.Counter({
+        (node.namespace, node.name): 1 / (1 + degree)
         for node, degree in graph.degree()
         if isinstance(node, Gene)
-    ))
+    })
 
 
 def process_rank_genes(graph: BELGraph) -> Counter[BaseEntity]:

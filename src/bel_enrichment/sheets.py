@@ -5,7 +5,7 @@
 import logging
 import os
 from collections import defaultdict
-from typing import Dict, Iterable, Mapping, Optional, Tuple
+from typing import Any, Dict, Iterable, Mapping, Optional, Tuple
 
 import pandas as pd
 import pyparsing
@@ -137,12 +137,16 @@ def generate_error_types(path: str) -> Tuple[Mapping[str, int], str]:
     return error_types, curator
 
 
-def generate_curation_report(path: str, filter: bool = False, edge_type: Optional[str] = None) -> dict:
+def generate_curation_report(
+        path: str,
+        edge_type_filter: Optional[str] = None,
+        use_tqdm: bool = True,
+        tqdm_kwargs: Optional[Mapping[str, Any]] = None,
+) -> Mapping:
     """Generate report about curated/non-curated statements in a given curation template.
 
     :param path: path to the excel file
-    :param filter: apply filter
-    :param edge_type: filter relationships that are not 'activation_edges' or 'inhibition_edges'
+    :param edge_type_filter: filter relationships that are not 'activation_edges' or 'inhibition_edges'
     :return: summary of the curation
     """
     try:
@@ -157,24 +161,27 @@ def generate_curation_report(path: str, filter: bool = False, edge_type: Optiona
 
     curation_results = defaultdict(int)
 
-    for line, row in df.iterrows():
+    it = df.iterrows()
+    if use_tqdm:
+        it = tqdm(it, **(tqdm_kwargs or {}))
+    for line, row in it:
         evidence = row.get('Evidence')
         if evidence == 'No evidence text.':
             logger.debug('No evidence text. Skipping...')
             continue
 
-        if filter:
+        if edge_type_filter is not None:
             relationship = row.get('Predicate')
 
             # Apply filter
-            if edge_type == 'activation_edges' and relationship not in CAUSAL_INCREASE_RELATIONS:
+            if edge_type_filter == 'activation_edges' and relationship not in CAUSAL_INCREASE_RELATIONS:
                 continue
 
-            elif edge_type == 'inhibition_edges' and relationship not in CAUSAL_DECREASE_RELATIONS:
+            elif edge_type_filter == 'inhibition_edges' and relationship not in CAUSAL_DECREASE_RELATIONS:
                 continue
 
-            elif edge_type not in {'activation_edges', 'inhibition_edges'}:
-                raise ValueError(f'Not valid edge_type: {edge_type}')
+            elif edge_type_filter not in {'activation_edges', 'inhibition_edges'}:
+                raise ValueError(f'Not valid edge_type: {edge_type_filter}')
 
         checked = row.get('Checked')
         correct = row.get('Correct')
@@ -212,26 +219,31 @@ def generate_curation_report(path: str, filter: bool = False, edge_type: Optiona
     return dict(curation_results)
 
 
-def generate_curation_summary(input_directory: str,
-                              output_directory: str,
-                              use_tqdm: bool = True,
-                              sheet_suffix: Optional[str] = None,
-                              filter: bool = False,
-                              edge_type: Optional[str] = None
-                              ) -> None:
+def generate_curation_summary(
+        input_directory: str,
+        output_directory: str,
+        sheet_suffix: str,
+        use_tqdm: bool = True,
+        edge_type_filter: Optional[str] = None,
+) -> None:
     """Generate a summary of the curation results on excel."""
     summary_excel_rows = {}
     error_excel_rows = {}
 
-    paths = iterate_sheets_paths(input_directory, suffix=sheet_suffix)
+    paths = iterate_sheets_paths(directory=input_directory, suffix=sheet_suffix)
     if use_tqdm:
-        paths = tqdm(list(paths), desc='Generating curation report')
+        paths = tqdm(list(paths), desc=f'Generating curation report in {output_directory}')
 
     for path in paths:
         gene_symbol = path.split('/')[-2]
 
         # Subfolder name (Gene Symbol) -> dictionary results
-        d = summary_excel_rows[gene_symbol] = generate_curation_report(path, filter, edge_type)
+        d = summary_excel_rows[gene_symbol] = generate_curation_report(
+            path=path,
+            edge_type_filter=edge_type_filter,
+            use_tqdm=use_tqdm,
+            tqdm_kwargs=dict(leave=False),
+        )
         if not d:
             logger.warning(f'Missing sheet, skipping curation report for {path}')
             continue
@@ -253,13 +265,9 @@ def generate_curation_summary(input_directory: str,
     df_error.to_csv(os.path.join(output_directory, 'error_types.csv'))
 
 
-def iterate_sheets_paths(directory: str, suffix: Optional[str] = None) -> Iterable[str]:
+def iterate_sheets_paths(*, directory: str, suffix: str) -> Iterable[str]:
     """List the excel curation sheets."""
-    if suffix is None:
-        suffix = '_curated.xlsx'
-    for path in os.listdir(directory):
-        subpath = os.path.join(directory, path)
-        if os.path.isdir(subpath):
-            yield from iterate_sheets_paths(subpath, suffix=suffix)
-        elif subpath.endswith(suffix):
-            yield subpath
+    for dirpath, dirnames, filenames in os.walk(directory):
+        for filename in filenames:
+            if filename.endswith(suffix):
+                yield os.path.join(dirpath, filename)
