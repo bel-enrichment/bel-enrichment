@@ -19,9 +19,10 @@ exclude =
     .eggs
 format = ${cyan}%(path)s${reset}:${yellow_bold}%(row)d${reset}:${green_bold}%(col)d${reset}: ${red_bold}%(code)s${reset} %(text)s
 ignore =
-    #D105
-    #E501
+    # D105
+    # E501
     W504
+    C901
 max-line-length = 120
 
 # flake8-import-order

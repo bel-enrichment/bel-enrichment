@@ -9,16 +9,13 @@ from typing import Any, Dict, Iterable, Mapping, Optional, Tuple
 
 import pandas as pd
 import pyparsing
+from tqdm import tqdm
+
 from pybel.constants import (
-    CAUSAL_DECREASE_RELATIONS,
-    CAUSAL_INCREASE_RELATIONS,
-    CITATION_REFERENCE,
-    CITATION_TYPE,
-    CITATION_TYPE_PUBMED
+    CAUSAL_DECREASE_RELATIONS, CAUSAL_INCREASE_RELATIONS, CITATION_REFERENCE, CITATION_TYPE, CITATION_TYPE_PUBMED,
 )
 from pybel.parser import BELParser
 from pybel.parser.exc import BELParserWarning, BELSyntaxError
-from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
