@@ -4,7 +4,6 @@
 
 import logging
 from collections import namedtuple
-from itertools import repeat
 from operator import attrgetter
 from typing import Iterable, List, Optional, TextIO, Tuple, Union
 
@@ -86,7 +85,7 @@ def get_and_write_statements_from_agents(
 
 
 def get_and_write_statements_from_pmids(
-    pmids: List[str],
+    pmids: Iterable[str],
     file: Optional[TextIO] = None,
     sep: Optional[str] = None,
     limit: Optional[int] = None,
@@ -95,14 +94,14 @@ def get_and_write_statements_from_pmids(
 ) -> List[Statement]:
     """Get INDRA statements for the given agents and write the to a TSV for BEL curation.
 
-    :param pmids: A list of PubMed identifiers
+    :param pmids: A finite iterable of PubMed identifiers
     :param file: The file to write to
     :param sep: The separator for the CSV. Defaults to a tab.
     :param limit: The optional limit of statements to write
     :param duplicates: should duplicate statements be written (with multiple evidences?)
     :param minimum_belief: The minimum belief score to keep
     """
-    ids = list(zip(repeat('pmid'), pmids))
+    ids = [('pmid', pmid.strip()) for pmid in pmids]
     statements = indra_db_rest.get_statements_for_paper(ids=ids)
 
     print_statements(
