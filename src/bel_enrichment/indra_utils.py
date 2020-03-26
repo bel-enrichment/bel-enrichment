@@ -102,7 +102,7 @@ def get_and_write_statements_from_pmids(
     :param minimum_belief: The minimum belief score to keep
     """
     ids = [('pmid', pmid.strip()) for pmid in pmids]
-    statements = indra_db_rest.get_statements_for_paper(ids=ids)
+    statements = indra_db_rest.get_statements_for_paper(ids=ids, simple_response=True)
 
     print_statements(
         statements,
