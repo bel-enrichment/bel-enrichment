@@ -138,7 +138,7 @@ def print_statements(
         statements = filter_belief(statements, minimum_belief)
 
     rows = get_rows_from_statements(statements, duplicates=duplicates)
-    rows = sorted(rows, key=attrgetter('pmid', 'evidence'))
+    rows = sorted(rows, key=attrgetter('uuid', 'pmid'))
 
     if limit is not None:
         rows = rows[:limit]
