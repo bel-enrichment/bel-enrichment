@@ -32,7 +32,7 @@ to the sheet. Higher belief means the more chance a statement is already right.
 
 .. code-block:: bash
 
-   $ bel-enrichment make_sheet zhang2011.bel --directory ~/Desktop/zhang-enrichment
+   $ bel-enrichment from-graph zhang2011.bel --directory ~/Desktop/zhang-enrichment
 
 Generate a ranking for genes based on the information content in a given BEL graph that has been pre-compiled by PyBEL.
 
