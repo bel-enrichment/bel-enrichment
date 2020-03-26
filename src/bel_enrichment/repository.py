@@ -14,11 +14,9 @@ import pandas as pd
 from tqdm import tqdm
 
 from bel_repository import BELMetadata, BELRepository
-from pybel import BELGraph, from_pickle, to_json_path, to_pickle
-from pybel import Manager
+from pybel import BELGraph, from_pickle, to_nodelink_file
 from pybel.cli import echo_warnings_via_pager
 from pybel.constants import ANNOTATIONS, CITATION
-from pybel.manager.citation_utils import enrich_pubmed_citations
 from pybel.parser import BELParser
 from pybel.struct import get_subgraphs_by_annotation
 from .sheets import _check_curation_template_columns, generate_curation_summary, iterate_sheets_paths, process_row
@@ -74,12 +72,10 @@ class BELSheetsRepository:
                 yield from iterate_sheets_paths(directory=self.directory, suffix=s)
 
     def get_graph(
-            self,
-            use_cached: bool = True,
-            use_tqdm: bool = False,
-            manager: Optional[Manager] = None,
-            tqdm_kwargs: Optional[Mapping[str, Any]] = None,
-            enrich_citations: bool = False,
+        self,
+        use_cached: bool = True,
+        use_tqdm: bool = False,
+        tqdm_kwargs: Optional[Mapping[str, Any]] = None,
     ) -> BELGraph:
         """Get the BEL graph from all sheets in this repository.
 
@@ -126,13 +122,7 @@ class BELSheetsRepository:
             prior = self.get_prior()
             assign_subgraphs(graph=graph, prior=prior)
 
-        if enrich_citations:
-            if manager is None:
-                manager = Manager()
-            enrich_pubmed_citations(graph=graph, manager=manager)
-
-        to_pickle(graph, self._cache_pickle_path)
-        to_json_path(graph, self._cache_json_path, indent=2, sort_keys=True)
+        to_nodelink_file(graph, self._cache_json_path, indent=2, sort_keys=True)
 
         return graph
 
@@ -163,11 +153,10 @@ class BELSheetsRepository:
         @main.command()
         @click.option('-w', '--show-warnings', is_flag=True)
         @click.option('-r', '--reload', is_flag=True)
-        @click.option('-p', '--enrich-citations', is_flag=True)
         @click.pass_obj
-        def compile(repo: BELSheetsRepository, show_warnings: bool, reload: bool, enrich_citations: bool):
+        def compile(repo: BELSheetsRepository, show_warnings: bool, reload: bool):
             """Generate all results and summaries."""
-            graph = repo.get_graph(use_cached=(not reload), use_tqdm=True, enrich_citations=enrich_citations)
+            graph = repo.get_graph(use_cached=(not reload), use_tqdm=True)
             if 0 == graph.number_of_nodes():
                 click.secho('Error: empty graph', fg='red')
                 sys.exit(-1)

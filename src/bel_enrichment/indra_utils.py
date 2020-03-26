@@ -13,7 +13,7 @@ from indra.sources import indra_db_rest
 from indra.statements import Evidence, Statement
 from indra.tools.assemble_corpus import filter_belief, run_preassembly
 from pybel import BELGraph
-from pybel.constants import ANNOTATIONS, CITATION, CITATION_REFERENCE, EVIDENCE, RELATION, UNQUALIFIED_EDGES
+from pybel.constants import ANNOTATIONS, CITATION, CITATION_IDENTIFIER, EVIDENCE, RELATION, UNQUALIFIED_EDGES
 
 __all__ = [
     'get_and_write_statements_from_agents',
@@ -23,7 +23,6 @@ __all__ = [
     'get_graph_from_statement',
 ]
 
-log = logging.getLogger(__name__)
 logging.getLogger('pybel_assembler').setLevel(logging.ERROR)
 logging.getLogger('assemble_corpus').setLevel(logging.ERROR)
 logging.getLogger('preassembler').setLevel(logging.ERROR)
@@ -52,12 +51,12 @@ SUBSTRING_BLACKLIST = {'CHEBI', 'PUBCHEM', 'act(bp('}
 
 
 def get_and_write_statements_from_agents(
-        agents: Union[str, List[str]],
-        file: Optional[TextIO] = None,
-        sep: Optional[str] = None,
-        limit: Optional[int] = None,
-        duplicates: bool = False,
-        minimum_belief: Optional[float] = None,
+    agents: Union[str, List[str]],
+    file: Optional[TextIO] = None,
+    sep: Optional[str] = None,
+    limit: Optional[int] = None,
+    duplicates: bool = False,
+    minimum_belief: Optional[float] = None,
 ) -> List[Statement]:
     """Get INDRA statements for the given agents and write the to a TSV for BEL curation.
 
@@ -87,12 +86,12 @@ def get_and_write_statements_from_agents(
 
 
 def get_and_write_statements_from_pmids(
-        pmids: List[str],
-        file: Optional[TextIO] = None,
-        sep: Optional[str] = None,
-        limit: Optional[int] = None,
-        duplicates: bool = False,
-        minimum_belief: Optional[float] = None,
+    pmids: List[str],
+    file: Optional[TextIO] = None,
+    sep: Optional[str] = None,
+    limit: Optional[int] = None,
+    duplicates: bool = False,
+    minimum_belief: Optional[float] = None,
 ) -> List[Statement]:
     """Get INDRA statements for the given agents and write the to a TSV for BEL curation.
 
@@ -119,12 +118,12 @@ def get_and_write_statements_from_pmids(
 
 
 def print_statements(
-        statements: List[Statement],
-        file: Optional[TextIO] = None,
-        sep: Optional[str] = None,
-        limit: Optional[int] = None,
-        duplicates: bool = False,
-        minimum_belief: Optional[float] = None,
+    statements: List[Statement],
+    file: Optional[TextIO] = None,
+    sep: Optional[str] = None,
+    limit: Optional[int] = None,
+    duplicates: bool = False,
+    minimum_belief: Optional[float] = None,
 ) -> None:
     """Write statements to a CSV for curation.
 
@@ -197,7 +196,7 @@ def _get_rows_from_statement(statement: Statement) -> Iterable[Row]:
         yield Row(
             uuid=statement.uuid,
             belief=round(statement.belief, 2),
-            pmid=data[CITATION][CITATION_REFERENCE],
+            pmid=data[CITATION][CITATION_IDENTIFIER],
             evidence=data[EVIDENCE],
             api=data[ANNOTATIONS]['source_api'],
             bel=bel,

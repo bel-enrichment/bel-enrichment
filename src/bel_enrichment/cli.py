@@ -50,8 +50,8 @@ def ranks(graph: BELGraph, number, sep):
 @click.option('-d', '--directory', type=click.Path(file_okay=False, dir_okay=True), default=os.getcwd())
 @info_cutoff_option
 @belief_cutoff_option
-def make_sheet(graph: BELGraph, directory: str, info_cutoff: float, belief_cutoff: float):
-    """Make a rational enrichment curation sheet."""
+def from_graph(graph: BELGraph, directory: str, info_cutoff: float, belief_cutoff: float):
+    """Make a a sheet for rational enrichment of the given BEL graph."""
     export_separate(
         graph=graph,
         directory=directory,
@@ -85,13 +85,33 @@ def from_agents(agents: List[str], output: TextIO, pickle_file: BinaryIO, belief
 
 
 @main.command()
-@click.option('--pmids', type=click.File('r'), default=sys.stdin, help='a text file with one PMID per line')
+@click.argument('pmids', nargs=-1)
 @output_option
 @pickle_output_option
 @belief_cutoff_option
 @no_duplicates_option
 def from_pmids(pmids: TextIO, output: TextIO, pickle_file: BinaryIO, belief_cutoff: float, no_duplicates: bool):
     """Make a sheet for the given PMIDs."""
+    pmids = [pmid.strip() for pmid in pmids]
+    statements = get_and_write_statements_from_pmids(
+        pmids=pmids,
+        file=output,
+        duplicates=(not no_duplicates),
+        minimum_belief=belief_cutoff,
+    )
+
+    if pickle_file:
+        pickle.dump(statements, pickle_file)
+
+
+@main.command()
+@click.option('-f', '--file', type=click.File('r'), default=sys.stdin, help='a text file with one PMID per line')
+@output_option
+@pickle_output_option
+@belief_cutoff_option
+@no_duplicates_option
+def from_pmid_file(pmids: TextIO, output: TextIO, pickle_file: BinaryIO, belief_cutoff: float, no_duplicates: bool):
+    """Make a sheet for the PMIDs in the given file."""
     pmids = [pmid.strip() for pmid in pmids]
     statements = get_and_write_statements_from_pmids(
         pmids=pmids,

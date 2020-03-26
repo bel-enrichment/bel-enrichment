@@ -12,10 +12,11 @@ import pyparsing
 from tqdm import tqdm
 
 from pybel.constants import (
-    CAUSAL_DECREASE_RELATIONS, CAUSAL_INCREASE_RELATIONS, CITATION_REFERENCE, CITATION_TYPE, CITATION_TYPE_PUBMED,
+    CAUSAL_DECREASE_RELATIONS, CAUSAL_INCREASE_RELATIONS, CITATION_DB, CITATION_IDENTIFIER, CITATION_TYPE_PUBMED,
 )
 from pybel.parser import BELParser
 from pybel.parser.exc import BELParserWarning, BELSyntaxError
+
 
 logger = logging.getLogger(__name__)
 
@@ -65,8 +66,8 @@ def process_row(bel_parser: BELParser, row: Dict, line_number: int) -> None:
         raise Exception('missing reference')
 
     bel_parser.control_parser.citation = {
-        CITATION_TYPE: CITATION_TYPE_PUBMED,
-        CITATION_REFERENCE: reference,
+        CITATION_DB: CITATION_TYPE_PUBMED,
+        CITATION_IDENTIFIER: reference,
     }
     # Set the evidence
     bel_parser.control_parser.evidence = row['Evidence']
@@ -135,10 +136,10 @@ def generate_error_types(path: str) -> Tuple[Mapping[str, int], str]:
 
 
 def generate_curation_report(
-        path: str,
-        edge_type_filter: Optional[str] = None,
-        use_tqdm: bool = True,
-        tqdm_kwargs: Optional[Mapping[str, Any]] = None,
+    path: str,
+    edge_type_filter: Optional[str] = None,
+    use_tqdm: bool = True,
+    tqdm_kwargs: Optional[Mapping[str, Any]] = None,
 ) -> Mapping:
     """Generate report about curated/non-curated statements in a given curation template.
 
@@ -217,11 +218,11 @@ def generate_curation_report(
 
 
 def generate_curation_summary(
-        input_directory: str,
-        output_directory: str,
-        sheet_suffix: str,
-        use_tqdm: bool = True,
-        edge_type_filter: Optional[str] = None,
+    input_directory: str,
+    output_directory: str,
+    sheet_suffix: str,
+    use_tqdm: bool = True,
+    edge_type_filter: Optional[str] = None,
 ) -> None:
     """Generate a summary of the curation results on excel."""
     summary_excel_rows = {}

@@ -18,13 +18,13 @@ __all__ = [
 
 
 def export_separate(
-        graph: BELGraph,
-        directory: str,
-        minimum_information_density: float = 1.0,
-        minimum_belief: float = 0.3,
-        sep: str = '\t',
-        limit: Optional[int] = None,
-        duplicates: bool = False,
+    graph: BELGraph,
+    directory: str,
+    minimum_information_density: float = 1.0,
+    minimum_belief: float = 0.3,
+    sep: str = '\t',
+    limit: Optional[int] = None,
+    duplicates: bool = False,
 ):
     """Get genes from the graph and export in separate folders."""
     gene_symbols = get_gene_symbols(
@@ -55,12 +55,12 @@ def export_separate(
 
 
 def export_single(
-        graph: BELGraph,
-        cutoff: float = 1.0,
-        file: Optional[TextIO] = None,
-        sep: str = '\t',
-        limit: Optional[int] = None,
-        duplicates: bool = False
+    graph: BELGraph,
+    cutoff: float = 1.0,
+    file: Optional[TextIO] = None,
+    sep: str = '\t',
+    limit: Optional[int] = None,
+    duplicates: bool = False
 ) -> List[Statement]:
     """Get genes from the graph and export as one file."""
     gene_symbols = get_gene_symbols(graph=graph, cutoff=cutoff)
