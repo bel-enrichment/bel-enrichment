@@ -187,7 +187,7 @@ def _get_rows_from_statement(statement: Statement) -> Iterable[Row]:
         if data[RELATION] in UNQUALIFIED_EDGES:
             continue
 
-        bel = graph.edge_to_bel(u, v, data, sep='\t')
+        bel = graph.edge_to_bel(u, v, data, sep='\t', use_identifiers=True)
 
         if any(s in bel for s in SUBSTRING_BLACKLIST):
             continue
