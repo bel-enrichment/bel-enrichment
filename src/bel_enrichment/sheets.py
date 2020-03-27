@@ -11,12 +11,9 @@ import pandas as pd
 import pyparsing
 from tqdm import tqdm
 
-from pybel.constants import (
-    CAUSAL_DECREASE_RELATIONS, CAUSAL_INCREASE_RELATIONS, CITATION_DB, CITATION_IDENTIFIER, CITATION_TYPE_PUBMED,
-)
+from pybel.constants import CAUSAL_DECREASE_RELATIONS, CAUSAL_INCREASE_RELATIONS, CITATION_TYPE_PUBMED
 from pybel.parser import BELParser
 from pybel.parser.exc import BELParserWarning, BELSyntaxError
-
 
 logger = logging.getLogger(__name__)
 
@@ -65,10 +62,9 @@ def process_row(bel_parser: BELParser, row: Dict, line_number: int) -> None:
     if not reference:
         raise Exception('missing reference')
 
-    bel_parser.control_parser.citation = {
-        CITATION_DB: CITATION_TYPE_PUBMED,
-        CITATION_IDENTIFIER: reference,
-    }
+    bel_parser.control_parser.citation_db = CITATION_TYPE_PUBMED
+    bel_parser.control_parser.citation_db_id = reference
+
     # Set the evidence
     bel_parser.control_parser.evidence = row['Evidence']
     # TODO set annotations if they exist
