@@ -13,8 +13,9 @@ import click
 import pandas as pd
 from tqdm import tqdm
 
+import pybel
 from bel_repository import BELMetadata, BELRepository
-from pybel import BELGraph, from_pickle, to_nodelink_file
+from pybel import BELGraph
 from pybel.cli import echo_warnings_via_pager
 from pybel.constants import ANNOTATIONS, CITATION
 from pybel.parser import BELParser
@@ -39,10 +40,8 @@ class BELSheetsRepository:
     prior: Union[None, BELGraph, BELRepository] = None
 
     sheet_suffix: Union[str, Tuple[str]] = field(default=('_curation.xlsx', '_curated.xlsx'))
-    pickle_name: str = 'sheets.bel.pickle'
-    json_name: str = 'sheets.bel.json'
+    json_name: str = 'sheets.bel.nodelink.json'
 
-    _cache_pickle_path: str = field(init=False)
     _cache_json_path: str = field(init=False)
 
     def __post_init__(self) -> None:  # noqa: D105
@@ -51,7 +50,6 @@ class BELSheetsRepository:
 
         os.makedirs(self.output_directory, exist_ok=True)
 
-        self._cache_pickle_path = os.path.join(self.output_directory, self.pickle_name)
         self._cache_json_path = os.path.join(self.output_directory, self.json_name)
 
     def get_prior(self) -> BELGraph:
@@ -81,8 +79,8 @@ class BELSheetsRepository:
 
         .. warning:: This BEL graph isn't pre-filled with namespace and annotation URLs.
         """
-        if use_cached and os.path.exists(self._cache_pickle_path):
-            return from_pickle(self._cache_pickle_path)
+        if use_cached and os.path.exists(self._cache_json_path):
+            return pybel.from_nodelink_gz(self._cache_json_path)
 
         graph = BELGraph()
         if self.metadata is not None:
@@ -122,7 +120,7 @@ class BELSheetsRepository:
             prior = self.get_prior()
             assign_subgraphs(graph=graph, prior=prior)
 
-        to_nodelink_file(graph, self._cache_json_path, indent=2, sort_keys=True)
+        pybel.to_nodelink_file(graph, self._cache_json_path, indent=2, sort_keys=True)
 
         return graph
 
