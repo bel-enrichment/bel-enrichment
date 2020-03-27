@@ -90,12 +90,28 @@ def from_agents(agents: List[str], output: TextIO, pickle_file: BinaryIO, belief
 @pickle_output_option
 @belief_cutoff_option
 @no_duplicates_option
-def from_pmids(pmids: List[str], output: TextIO, pickle_file: BinaryIO, belief_cutoff: float, no_duplicates: bool):
+@click.option('--single-pmid', is_flag=True)
+def from_pmids(
+    pmids: List[str],
+    output: TextIO,
+    pickle_file: BinaryIO,
+    belief_cutoff: float,
+    no_duplicates: bool,
+    single_pmid: bool,
+):
     """Make a sheet for the given PMIDs."""
+    keep_only_pmid = None
+    if single_pmid:
+        if len(pmids) != 1:
+            click.secho('Can not use --single-pmid with multiple pmids')
+            sys.exit(1)
+        keep_only_pmid = pmids[0]
+
     statements = get_and_write_statements_from_pmids(
         pmids=pmids,
         file=output,
         duplicates=(not no_duplicates),
+        keep_only_pmid=keep_only_pmid,
         minimum_belief=belief_cutoff,
     )
 

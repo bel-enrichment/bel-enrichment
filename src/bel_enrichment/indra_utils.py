@@ -85,11 +85,12 @@ def get_and_write_statements_from_agents(
 
 
 def get_and_write_statements_from_pmids(
-    pmids: Iterable[str],
+    pmids: Union[str, Iterable[str]],
     file: Optional[TextIO] = None,
     sep: Optional[str] = None,
     limit: Optional[int] = None,
     duplicates: bool = False,
+    keep_only_pmid: Optional[str] = None,
     minimum_belief: Optional[float] = None,
 ) -> List[Statement]:
     """Get INDRA statements for the given agents and write the to a TSV for BEL curation.
@@ -99,9 +100,15 @@ def get_and_write_statements_from_pmids(
     :param sep: The separator for the CSV. Defaults to a tab.
     :param limit: The optional limit of statements to write
     :param duplicates: should duplicate statements be written (with multiple evidences?)
+    :param keep_only_pmid: If set only keeps evidences from this PMID. Warning: still might
+     have multiple evidences.
     :param minimum_belief: The minimum belief score to keep
     """
-    ids = [('pmid', pmid.strip()) for pmid in pmids]
+    if isinstance(pmids, str):
+        ids = [('pmid', pmids.strip())]
+    else:
+        ids = [('pmid', pmid.strip()) for pmid in pmids]
+
     statements = indra_db_rest.get_statements_for_paper(ids=ids, simple_response=True)
 
     print_statements(
@@ -110,6 +117,7 @@ def get_and_write_statements_from_pmids(
         sep=sep,
         limit=limit,
         duplicates=duplicates,
+        keep_only_pmid=keep_only_pmid,
         minimum_belief=minimum_belief,
     )
 
@@ -122,6 +130,8 @@ def print_statements(
     sep: Optional[str] = None,
     limit: Optional[int] = None,
     duplicates: bool = False,
+    keep_only_pmid: Optional[str] = None,
+    sort_attrs: Iterable[str] = ('uuid', 'pmid'),
     minimum_belief: Optional[float] = None,
 ) -> None:
     """Write statements to a CSV for curation.
@@ -137,8 +147,8 @@ def print_statements(
     if minimum_belief is not None:
         statements = filter_belief(statements, minimum_belief)
 
-    rows = get_rows_from_statements(statements, duplicates=duplicates)
-    rows = sorted(rows, key=attrgetter('uuid', 'pmid'))
+    rows = get_rows_from_statements(statements, duplicates=duplicates, keep_only_pmid=keep_only_pmid)
+    rows = sorted(rows, key=attrgetter(*sort_attrs))
 
     if limit is not None:
         rows = rows[:limit]
@@ -147,20 +157,42 @@ def print_statements(
         print(*row, sep=sep, file=file)
 
 
-def get_rows_from_statements(statements: Iterable[Statement], duplicates: bool = False) -> List[Row]:
+def get_rows_from_statements(
+    statements: Iterable[Statement],
+    duplicates: bool = False,
+    keep_only_pmid: Optional[str] = None,
+) -> List[Row]:
     """Build and sort BEL curation rows from a list of statements using only the first evidence for each."""
     for statement in statements:
-        yield from get_rows_from_statement(statement, duplicates=duplicates)
+        yield from get_rows_from_statement(statement, duplicates=duplicates, keep_only_pmid=keep_only_pmid)
 
 
-def get_rows_from_statement(statement: Statement, duplicates: bool = True) -> Iterable[Row]:
-    """Convert an INDRA statement into an iterable of BEL curation rows."""
+def get_rows_from_statement(
+    statement: Statement,
+    duplicates: bool = True,
+    keep_only_pmid: Optional[str] = None,
+) -> Iterable[Row]:
+    """Convert an INDRA statement into an iterable of BEL curation rows.
+
+    :param statement: The INDRA statement
+    :param duplicates: Keep several evidences for the same INDRA statement
+    :param keep_only_pmid: If set only keeps evidences from this PMID. Warning: still might
+     have multiple evidences.
+    """
     statement.evidence = [e for e in statement.evidence if _keep_evidence(e)]
 
     # Remove evidences from BioPax
     if 0 == len(statement.evidence):
         return iter([])
 
+    if keep_only_pmid is not None:
+        statement.evidence = [
+            evidence
+            for evidence in statement.evidence
+            if evidence.pmid == keep_only_pmid
+        ]
+        # Might also be a case where several evidences from
+        # same document exist, but we really only want one.
     if not duplicates:
         # Remove all but the first remaining evidence for the statement
         # unused_evidences = statement.evidence[1:]
