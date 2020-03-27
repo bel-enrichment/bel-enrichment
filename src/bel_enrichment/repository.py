@@ -25,6 +25,7 @@ from .summary import count_indra_apis
 
 __all__ = [
     'BELSheetsRepository',
+    'process_df',
 ]
 
 logger = logging.getLogger(__name__)
@@ -98,6 +99,8 @@ class BELSheetsRepository:
             paths = tqdm(list(paths), **_tqdm_kwargs)
 
         for path in paths:
+            graph.path = path
+
             try:
                 df = pd.read_excel(path)
             except LookupError as exc:
@@ -105,16 +108,11 @@ class BELSheetsRepository:
                 continue
 
             # Check columns in DataFrame exist
-            if not _check_curation_template_columns(df, path):
+            if not _check_curation_template_columns(df):
+                logger.warning(f'^ above columns in {path} were missing')
                 continue
 
-            graph.path = path
-
-            it = df.iterrows()
-            if use_tqdm:
-                it = tqdm(it, total=len(df.index), leave=False, desc=f'Reading {path}')
-            for line_number, row in it:
-                process_row(bel_parser=bel_parser, row=row, line_number=line_number)
+            process_df(bel_parser=bel_parser, df=df, use_tqdm=use_tqdm, tqdm_kwargs=dict(desc=f'Reading {path}'))
 
         if self.prior is not None:  # assign edges to sub-graphs
             prior = self.get_prior()
@@ -215,6 +213,23 @@ class BELSheetsRepository:
             """Print all curated sheets."""
             for path in repo.iterate_sheets_paths():
                 click.echo(path)
+
+
+def process_df(
+    bel_parser: BELParser,
+    df: pd.DataFrame,
+    use_tqdm: bool = True,
+    tqdm_kwargs: Optional[Mapping[str, Any]] = None,
+) -> None:
+    """Load the graph in the parser with the statements from the curation sheet."""
+    it = df.iterrows()
+    _tqdm_kwargs = dict(leave=False)
+    if tqdm_kwargs:
+        _tqdm_kwargs.update(tqdm_kwargs)
+    if use_tqdm:
+        it = tqdm(it, total=len(df.index), **_tqdm_kwargs)
+    for line_number, row in it:
+        process_row(bel_parser=bel_parser, row=row, line_number=line_number)
 
 
 def assign_subgraphs(graph: BELGraph, prior: BELGraph, annotation: str = 'Subgraph') -> None:

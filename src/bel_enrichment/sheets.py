@@ -24,25 +24,14 @@ ERROR_BUT_ALSO_OTHER_STATEMENT = 'Error but other statement was identified'
 MODIFIED_BY_CURATOR = 'Modified by curator'
 
 
-def _check_curation_template_columns(df: pd.DataFrame, path: str) -> bool:
+def _check_curation_template_columns(df: pd.DataFrame) -> bool:
     """Check the columns in a curation dataframe."""
-    if 'Curator' not in df.columns:
-        logger.warning(f'{path} is missing the "Curator" column')
-        return False
-
-    if 'Checked' not in df.columns:
-        logger.warning(f'{path} is missing the "Checked" column')
-        return False
-
-    if 'Correct' not in df.columns:
-        logger.warning(f'{path} is missing the "Correct" column')
-        return False
-
-    if 'Changed' not in df.columns:
-        logger.warning(f'{path} is missing the "Changed" column')
-        return False
-
-    return True
+    rv = True
+    for column in ['Curator', 'Checked', 'Corret', 'Changed']:
+        if column not in df.columns:
+            logger.warning(f'missing the "{column}" column')
+            rv = False
+    return rv
 
 
 def process_row(bel_parser: BELParser, row: Dict, line_number: int) -> None:
@@ -53,11 +42,7 @@ def process_row(bel_parser: BELParser, row: Dict, line_number: int) -> None:
     if not (row['Correct'] or row['Changed']):  # if it's neither correct nor changed, then it's fucked
         return
 
-    reference = str(
-        row['Citation Reference']
-        if 'Citation Reference' in row else
-        row['PMID']
-    )
+    reference = row['PMID']
 
     if not reference:
         raise Exception('missing reference')
