@@ -13,7 +13,7 @@ import indra.util.get_version
 import pybel.version
 from indra.statements import stmts_to_json
 from pybel import BELGraph
-from pybel.cli import graph_pickle_argument
+from pybel.cli import graph_argument
 from .indra_utils import get_and_write_statements_from_agents, get_and_write_statements_from_pmids
 from .ranking import process_rank_genes
 from .workflow import export_separate
@@ -22,12 +22,14 @@ info_cutoff_option = click.option(
     '--info-cutoff',
     type=float,
     default=1.0,
+    show_default=True,
     help='Minimum inverse node degree. Lower allows more genes.',
 )
 belief_cutoff_option = click.option(
     '--belief-cutoff',
     type=float,
     default=0.30,
+    show_default=True,
     help='Minimum belief score. Lower gets more statements.',
 )
 only_query_option = click.option('--only-query', is_flag=True)
@@ -44,7 +46,7 @@ def main():
 
 
 @main.command()
-@graph_pickle_argument
+@graph_argument
 @click.option('-n', '--number', type=int)
 @click.option('-s', '--sep', default='\t')
 def ranks(graph: BELGraph, number, sep):
@@ -55,8 +57,9 @@ def ranks(graph: BELGraph, number, sep):
 
 
 @main.command()
-@graph_pickle_argument
-@click.option('-d', '--directory', type=click.Path(file_okay=False, dir_okay=True), default=os.getcwd())
+@graph_argument
+@click.option('-d', '--directory', type=click.Path(file_okay=False, dir_okay=True), default=os.getcwd(),
+              show_default=True, help='The place where sheets are output')
 @info_cutoff_option
 @belief_cutoff_option
 def from_graph(graph: BELGraph, directory: str, info_cutoff: float, belief_cutoff: float):
@@ -119,16 +122,14 @@ def from_pmids(
     only_query: bool,
 ):
     """Make a sheet for the given PMIDs."""
-    statements = get_and_write_statements_from_pmids(
+    get_and_write_statements_from_pmids(
         pmids=pmids,
         file=output,
+        json_file=statement_file,
         duplicates=(not no_duplicates),
         keep_only_query_pmids=only_query,
         minimum_belief=belief_cutoff,
     )
-
-    if statement_file:
-        json.dump(stmts_to_json(statements), statement_file, indent=2)
 
 
 @main.command()
@@ -147,16 +148,14 @@ def from_pmid_file(
     only_query: bool,
 ):
     """Make a sheet for the PMIDs in the given file."""
-    statements = get_and_write_statements_from_pmids(
+    get_and_write_statements_from_pmids(
         pmids=pmids,
         file=output,
+        json_file=statement_file,
         duplicates=(not no_duplicates),
         minimum_belief=belief_cutoff,
         keep_only_query_pmids=only_query,
     )
-
-    if statement_file:
-        json.dump(stmts_to_json(statements), statement_file, indent=2)
 
 
 if __name__ == '__main__':

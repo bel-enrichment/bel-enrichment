@@ -3,6 +3,7 @@
 """Utilities for INDRA."""
 
 import itertools as itt
+import json
 import logging
 from dataclasses import dataclass
 from operator import attrgetter
@@ -10,7 +11,7 @@ from typing import Collection, Iterable, List, Optional, TextIO, Union
 
 from indra.assemblers.pybel import PybelAssembler
 from indra.sources import indra_db_rest
-from indra.statements import Evidence, Statement
+from indra.statements import Evidence, Statement, stmts_to_json
 from indra.tools.assemble_corpus import filter_belief, filter_grounded_only, run_preassembly
 from pybel import BELGraph
 from pybel.canonicalize import edge_to_tuple
@@ -110,20 +111,27 @@ def get_and_write_statements_from_agents(
     return statements
 
 
+def get_statements_from_pmids(pmids: Iterable[str]) -> List[Statement]:
+    ids = [('pmid', pmid.strip()) for pmid in pmids]
+    return indra_db_rest.get_statements_for_paper(ids=ids, simple_response=True)
+
+
 def get_and_write_statements_from_pmids(
     pmids: Union[str, Iterable[str]],
     file: Union[None, str, TextIO] = None,
+    json_file: Union[None, str, TextIO] = None,
     sep: Optional[str] = None,
     limit: Optional[int] = None,
     duplicates: bool = False,
     keep_only_query_pmids: bool = False,
     minimum_belief: Optional[float] = None,
     extra_columns: Optional[List[str]] = None,
-) -> List[Statement]:
+) -> None:
     """Get INDRA statements for the given agents and write the to a TSV for BEL curation.
 
     :param pmids: A finite iterable of PubMed identifiers
-    :param file: The file to write to
+    :param file: The file to write curation sheets to
+    :param json_file: The file to output structured INDRA statement JSON to
     :param sep: The separator for the CSV. Defaults to a tab.
     :param limit: The optional limit of statements to write
     :param duplicates: should duplicate statements be written (with multiple evidences?)
@@ -135,8 +143,13 @@ def get_and_write_statements_from_pmids(
     if isinstance(pmids, str):
         pmids = [pmids]
 
-    ids = [('pmid', pmid.strip()) for pmid in pmids]
-    statements = indra_db_rest.get_statements_for_paper(ids=ids, simple_response=True)
+    statements = get_statements_from_pmids(pmids)
+
+    if isinstance(json_file, str):
+        with open(json_file, 'w') as _json_file:
+            json.dump(stmts_to_json(statements), _json_file, indent=2)
+    elif json_file is not None:
+        json.dump(stmts_to_json(statements), json_file, indent=2)
 
     print_statements(
         statements,
@@ -148,8 +161,6 @@ def get_and_write_statements_from_pmids(
         minimum_belief=minimum_belief,
         extra_columns=extra_columns,
     )
-
-    return statements
 
 
 def print_statements(

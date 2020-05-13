@@ -6,12 +6,12 @@ import collections
 from typing import Counter, Tuple
 
 from pybel import BELGraph, Pipeline
-from pybel.constants import ABUNDANCE
 from pybel.dsl import BaseEntity, Gene
 from pybel.struct import (
-    collapse_all_variants, collapse_to_genes, enrich_protein_and_rna_origins, function_inclusion_filter_builder,
-    remove_associations, remove_biological_processes, remove_filtered_nodes, remove_pathologies,
+    collapse_all_variants, collapse_to_genes, enrich_protein_and_rna_origins, remove_associations,
+    remove_biological_processes, remove_filtered_nodes, remove_pathologies,
 )
+from pybel.struct.filters import is_abundance
 from pybel.struct.pipeline import in_place_transformation
 
 __all__ = [
@@ -24,7 +24,7 @@ __all__ = [
 @in_place_transformation
 def remove_abundances(graph: BELGraph) -> None:
     """Remove biological process nodes from the graph."""
-    remove_filtered_nodes(graph, node_predicates=function_inclusion_filter_builder({ABUNDANCE}))
+    remove_filtered_nodes(graph, node_predicates=is_abundance)
 
 
 #: The pipeline to remove questionable content from the graph and make re-curation easier.
